@@ -14,7 +14,7 @@ import { NotificationSystem } from "./components/notifications/NotificationSyste
 import { SettingsPanel } from "./components/settings/SettingsPanel";
 import { ChatbotInterface } from "./components/chatbot/ChatbotInterface";
 import { CleanSpaceGame } from "./components/cleanspace/CleanSpaceGame";
-import { AuthProvider } from "./contexts/AuthContext";
+import { AuthProvider } from "./contexts/AuthContextSimple";
 import { DemoNotifications } from "./components/demo/DemoNotifications";
 
 function App() {
@@ -108,8 +108,8 @@ function App() {
           onToggle={() => setShowChatbot(!showChatbot)}
         />
 
-        {/* Demo Notifications */}
-        <DemoNotifications />
+        {/* Demo Notifications - Disabled to prevent duplicate key warnings */}
+        {/* <DemoNotifications /> */}
 
         {/* Ambient Background Effects */}
         <div className="fixed inset-0 pointer-events-none">

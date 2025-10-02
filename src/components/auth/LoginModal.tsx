@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { motion, AnimatePresence } from "motion/react";
 import { X, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { Button } from "../ui/button";
-import { useAuth } from "../../contexts/AuthContext";
+import { useAuth } from "../../contexts/AuthContextSimple";
 
 interface LoginModalProps {
   isOpen: boolean;

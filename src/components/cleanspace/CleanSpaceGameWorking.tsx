@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useCallback } from "react";
-import { motion, AnimatePresence } from "motion/react";
+import React, { useState, useEffect } from "react";
+import { motion } from "motion/react";
 import {
   MapPin,
   TreePine,
@@ -20,63 +20,42 @@ import {
   RotateCcw,
   Gamepad2,
   Trophy,
-  ArrowLeft,
-  Satellite,
-  Award,
-  Star,
-  Bot,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
-import { MissionSelector } from "./MissionSelector";
-import { MissionLevel } from "../../data/missionLevels";
-import { div } from "motion/react-client";
 
-// Enhanced types for mission system
-interface GameLocation {
+// Simplified types for the working version
+interface SimpleGameLocation {
   id: string;
   name: string;
   latitude: number;
   longitude: number;
   city: string;
   country: string;
-  regionSize?: number;
 }
 
-interface PlayerState {
+interface SimplePlayerState {
   health: number;
   energy: number;
   credits: number;
-  location: GameLocation;
-  safeTimeRemaining?: number;
-  isInSafeZone?: boolean;
+  location: SimpleGameLocation;
 }
 
-interface AirQuality {
+interface SimpleAirQuality {
   aqi: number;
   pm25: number;
   no2: number;
   o3: number;
-  co?: number;
-  so2?: number;
   status: "good" | "moderate" | "unhealthy" | "hazardous";
-  timestamp?: Date;
-  source?: string;
-  dataQuality?: number;
 }
 
-interface Weather {
+interface SimpleWeather {
   temperature: number;
   humidity: number;
   windSpeed: number;
   visibility: number;
-  pressure?: number;
-  windDirection?: number;
-  cloudCover?: number;
-  timestamp?: Date;
-  source?: string;
 }
 
 interface GameAction {
@@ -89,30 +68,7 @@ interface GameAction {
   color: string;
 }
 
-interface UserProgress {
-  completedMissions: string[];
-  totalScore: number;
-  unlockedAchievements: string[];
-  currentLevel: number;
-  totalXP: number;
-}
-
-interface MissionObjective {
-  id: string;
-  type: string;
-  target: number;
-  current: number;
-  description: string;
-  points: number;
-  isCompleted: boolean;
-}
-
-interface CleanSpaceGameProps {
-  selectedLocation?: GameLocation;
-  onLocationSelect?: (location: GameLocation) => void;
-}
-
-const mockLocations: GameLocation[] = [
+const mockLocations: SimpleGameLocation[] = [
   {
     id: "nyc",
     name: "New York City",
@@ -120,7 +76,6 @@ const mockLocations: GameLocation[] = [
     longitude: -74.006,
     city: "New York",
     country: "USA",
-    regionSize: 5,
   },
   {
     id: "la",
@@ -129,7 +84,6 @@ const mockLocations: GameLocation[] = [
     longitude: -118.2437,
     city: "Los Angeles",
     country: "USA",
-    regionSize: 5,
   },
   {
     id: "delhi",
@@ -138,7 +92,6 @@ const mockLocations: GameLocation[] = [
     longitude: 77.209,
     city: "Delhi",
     country: "India",
-    regionSize: 5,
   },
   {
     id: "beijing",
@@ -147,7 +100,6 @@ const mockLocations: GameLocation[] = [
     longitude: 116.4074,
     city: "Beijing",
     country: "China",
-    regionSize: 5,
   },
 ];
 
@@ -190,59 +142,28 @@ const gameActions: GameAction[] = [
   },
 ];
 
-export function CleanSpaceGame({
-  selectedLocation,
-  onLocationSelect,
-}: CleanSpaceGameProps) {
-  // Mission System State
-  const [showMissionSelector, setShowMissionSelector] = useState(true);
-  const [currentMission, setCurrentMission] = useState<MissionLevel | null>(
-    null
+export function CleanSpaceGameWorking() {
+  const [currentLocation, setCurrentLocation] = useState<SimpleGameLocation>(
+    mockLocations[0]
   );
-  const [missionObjectives, setMissionObjectives] = useState<
-    MissionObjective[]
-  >([]);
-  const [missionStartTime, setMissionStartTime] = useState<number | null>(null);
-  const [userProgress, setUserProgress] = useState<UserProgress>({
-    completedMissions: [],
-    totalScore: 0,
-    unlockedAchievements: [],
-    currentLevel: 1,
-    totalXP: 0,
-  });
-
-  // Game State
-  const [currentLocation, setCurrentLocation] = useState<GameLocation>(
-    selectedLocation || mockLocations[0]
-  );
-  const [player, setPlayer] = useState<PlayerState>({
+  const [player, setPlayer] = useState<SimplePlayerState>({
     health: 100,
     energy: 100,
     credits: 100,
-    location: selectedLocation || mockLocations[0],
-    safeTimeRemaining: 300,
-    isInSafeZone: false,
+    location: mockLocations[0],
   });
-  const [airQuality, setAirQuality] = useState<AirQuality>({
+  const [airQuality, setAirQuality] = useState<SimpleAirQuality>({
     aqi: 85,
     pm25: 18.2,
     no2: 28.7,
     o3: 45.1,
     status: "moderate",
-    timestamp: new Date(),
-    source: "NASA APIs",
-    dataQuality: 0.85,
   });
-  const [weather, setWeather] = useState<Weather>({
+  const [weather, setWeather] = useState<SimpleWeather>({
     temperature: 22,
     humidity: 65,
     windSpeed: 3.2,
     visibility: 8.5,
-    pressure: 1013,
-    windDirection: 180,
-    cloudCover: 40,
-    timestamp: new Date(),
-    source: "NASA Power",
   });
   const [isGameActive, setIsGameActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
@@ -256,14 +177,6 @@ export function CleanSpaceGame({
     "loading" | "success" | "error" | "not-tested"
   >("not-tested");
   const [nasaDataLogs, setNasaDataLogs] = useState<string[]>([]);
-  const [showMissionComplete, setShowMissionComplete] = useState(false);
-  const [missionResults, setMissionResults] = useState<{
-    score: number;
-    completionTime: number;
-    objectivesCompleted: number;
-    totalObjectives: number;
-    bonusPoints: number;
-  } | null>(null);
 
   // Add log function
   const addLog = (message: string) => {
@@ -273,162 +186,8 @@ export function CleanSpaceGame({
     setNasaDataLogs((prev) => [...prev.slice(-9), logMessage]); // Keep last 10 logs
   };
 
-  // Load user progress from localStorage
-  const loadUserProgress = useCallback(() => {
-    const savedProgress = localStorage.getItem("cleanspace_progress");
-    if (savedProgress) {
-      setUserProgress(JSON.parse(savedProgress));
-    }
-  }, []);
-
-  // Save user progress
-  const saveUserProgress = useCallback((progress: UserProgress) => {
-    localStorage.setItem("cleanspace_progress", JSON.stringify(progress));
-    setUserProgress(progress);
-  }, []);
-
-  // Handle mission selection
-  const handleMissionSelect = useCallback((mission: MissionLevel) => {
-    console.log("🎯 Mission selected:", mission.title);
-    setCurrentMission(mission);
-    setCurrentLocation(mission.location);
-    setShowMissionSelector(false);
-
-    // Initialize mission objectives
-    const objectives = mission.objectives.map((obj) => ({
-      ...obj,
-      current: 0,
-      isCompleted: false,
-    }));
-    setMissionObjectives(objectives);
-    setMissionStartTime(Date.now());
-
-    // Initialize player with mission-specific settings
-    setPlayer({
-      health: 100,
-      energy: 100,
-      credits: mission.initialCredits,
-      location: mission.location,
-      safeTimeRemaining: mission.estimatedTime * 60,
-      isInSafeZone: false,
-    });
-
-    // Set game time based on mission
-    setGameTime(mission.estimatedTime * 60);
-    setScore(0);
-    setActionCooldowns({});
-
-    // Load NASA data for the mission location
-    addLog(`🚀 Starting mission: ${mission.title}`);
-    addLog(
-      `📍 Location: ${mission.location.city}, ${mission.location.country}`
-    );
-    loadNasaData(mission.location);
-  }, []);
-
-  // Update mission objectives
-  const updateMissionObjectives = useCallback(
-    (actionType: string, value: number = 1) => {
-      if (!currentMission) return;
-
-      setMissionObjectives((prev) =>
-        prev.map((obj) => {
-          if (obj.type === actionType && !obj.isCompleted) {
-            const newCurrent = Math.min(obj.current + value, obj.target);
-            const isCompleted = newCurrent >= obj.target;
-
-            if (isCompleted && !obj.isCompleted) {
-              addLog(`✅ Objective completed: ${obj.description}`);
-              setScore((prevScore) => prevScore + obj.points);
-            }
-
-            return {
-              ...obj,
-              current: newCurrent,
-              isCompleted,
-            };
-          }
-          return obj;
-        })
-      );
-    },
-    [currentMission]
-  );
-
-  // Check mission completion
-  const checkMissionCompletion = useCallback(() => {
-    if (!currentMission || !missionObjectives.length || !missionStartTime)
-      return;
-
-    const completedObjectives = missionObjectives.filter(
-      (obj) => obj.isCompleted
-    );
-    const allCompleted =
-      completedObjectives.length === missionObjectives.length;
-
-    if (allCompleted) {
-      const completionTime = (Date.now() - missionStartTime) / 1000;
-      const timeBonus =
-        completionTime < currentMission.estimatedTime * 60 ? 500 : 0;
-      const healthBonus = player.health > 80 ? 200 : 0;
-      const totalScore = score + timeBonus + healthBonus;
-
-      setMissionResults({
-        score: totalScore,
-        completionTime: Math.round(completionTime),
-        objectivesCompleted: completedObjectives.length,
-        totalObjectives: missionObjectives.length,
-        bonusPoints: timeBonus + healthBonus,
-      });
-
-      // Update user progress
-      const newProgress: UserProgress = {
-        ...userProgress,
-        completedMissions: [
-          ...userProgress.completedMissions,
-          currentMission.id,
-        ],
-        totalScore: userProgress.totalScore + totalScore,
-        totalXP: userProgress.totalXP + currentMission.rewards.xp,
-        unlockedAchievements: [
-          ...userProgress.unlockedAchievements,
-          ...currentMission.rewards.achievements,
-        ],
-        currentLevel:
-          Math.floor(
-            (userProgress.totalXP + currentMission.rewards.xp) / 1000
-          ) + 1,
-      };
-
-      saveUserProgress(newProgress);
-      setIsGameActive(false);
-      setShowMissionComplete(true);
-
-      addLog(`🎉 Mission completed! Score: ${totalScore}`);
-      addLog(`⏱️ Completion time: ${Math.round(completionTime)}s`);
-    }
-  }, [
-    currentMission,
-    missionObjectives,
-    missionStartTime,
-    score,
-    player.health,
-    userProgress,
-    saveUserProgress,
-  ]);
-
-  // Handle mission completion modal close
-  const handleMissionCompleteClose = useCallback(() => {
-    setShowMissionComplete(false);
-    setShowMissionSelector(true);
-    setCurrentMission(null);
-    setMissionResults(null);
-    setMissionObjectives([]);
-    setMissionStartTime(null);
-  }, []);
-
   // Load real NASA data
-  const loadNasaData = async (location: GameLocation) => {
+  const loadNasaData = async (location: SimpleGameLocation) => {
     setNasaDataStatus("loading");
     addLog("🚀 Starting NASA data loading...");
 
@@ -507,7 +266,7 @@ export function CleanSpaceGame({
                       (r: any) => r.parameter === "no2"
                     );
                     const o3Data = data.results.find(
-                      (r: any) => r.parameter === "o3"
+                      (r: unknown) => r.parameter === "o3"
                     );
 
                     if (pm25Data || no2Data || o3Data) {
@@ -604,13 +363,10 @@ export function CleanSpaceGame({
 
   // Initialize NASA data loading on component mount
   useEffect(() => {
-    loadUserProgress();
-  }, [loadUserProgress]);
-
-  // Check mission completion when objectives change
-  useEffect(() => {
-    checkMissionCompletion();
-  }, [missionObjectives, checkMissionCompletion]);
+    addLog("🚀 Initializing CleanSpace Mission");
+    addLog("🛰️ Loading NASA satellite data...");
+    loadNasaData(currentLocation);
+  }, []);
 
   // Game loop
   useEffect(() => {
@@ -696,29 +452,10 @@ export function CleanSpaceGame({
     setAirQuality((prev) => ({
       ...prev,
       aqi: Math.max(0, prev.aqi + improvement),
-      timestamp: new Date(),
     }));
-
-    // Update mission objectives
-    if (actionId === "plant_tree" || actionId === "plant_rooftop_garden") {
-      updateMissionObjectives("plant_trees", 1);
-    } else if (
-      actionId === "remove_vehicle" ||
-      actionId === "shutdown_factory"
-    ) {
-      updateMissionObjectives("remove_pollution", 1);
-    }
-
-    // Check AQI objective
-    const newAQI = Math.max(0, airQuality.aqi + improvement);
-    if (newAQI < 50) {
-      updateMissionObjectives("reduce_aqi", 1);
-    }
 
     setScore((prev) => prev + Math.abs(improvement) * 10);
     setSelectedAction(null);
-
-    addLog(`🎯 Action completed: ${action.name} (AQI: ${newAQI.toFixed(1)})`);
   };
 
   const startGame = () => {
@@ -773,50 +510,23 @@ export function CleanSpaceGame({
     return "Unhealthy";
   };
 
-  // Show mission selector if no mission is selected
-  if (showMissionSelector) {
-    return (
-      <MissionSelector
-        onMissionSelect={handleMissionSelect}
-        onBack={() => setShowMissionSelector(false)}
-        userProgress={userProgress}
-      />
-    );
-  }
-
   return (
-    <div className="min-h-screen cosmic-gradient relative">
+    <div className="min-h-screen cosmic-gradient">
       {/* Header */}
       <div className="bg-gray-900/40 backdrop-blur-sm border-b border-gray-700/50 p-6">
         <div className="max-w-7xl mx-auto">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <Button
-                variant="outline"
-                onClick={() => setShowMissionSelector(true)}
-                className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10"
-              >
-                <ArrowLeft className="w-4 h-4 mr-2" />
-                Missions
-              </Button>
               <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-500 rounded-xl flex items-center justify-center">
-                <Satellite className="w-6 h-6 text-white" />
+                <Gamepad2 className="w-6 h-6 text-white" />
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gradient">
-                  {currentMission?.title || "CleanSpace Mission"}
+                  CleanSpace Game
                 </h1>
-                <div className="flex items-center space-x-2">
-                  <MapPin className="w-4 h-4 text-cyan-400" />
-                  <p className="text-gray-400">
-                    {currentLocation.city}, {currentLocation.country}
-                  </p>
-                  {currentMission && (
-                    <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50 ml-2">
-                      Level {currentMission.level}
-                    </Badge>
-                  )}
-                </div>
+                <p className="text-gray-400">
+                  Location-based air quality simulation
+                </p>
               </div>
             </div>
             <div className="flex items-center space-x-4">
@@ -825,11 +535,6 @@ export function CleanSpaceGame({
               </Badge>
               <Badge variant="outline" className="px-3 py-1">
                 Time: {formatTime(gameTime)}
-              </Badge>
-              <Badge variant="outline" className="px-3 py-1">
-                Objectives:{" "}
-                {missionObjectives.filter((obj) => obj.isCompleted).length}/
-                {missionObjectives.length}
               </Badge>
             </div>
           </div>
@@ -1116,12 +821,12 @@ export function CleanSpaceGame({
               <Badge
                 variant={
                   nasaDataStatus === "success"
-                    ? "default"
+                    ? "success"
                     : nasaDataStatus === "error"
                     ? "destructive"
                     : nasaDataStatus === "loading"
-                    ? "secondary"
-                    : "outline"
+                    ? "warning"
+                    : "secondary"
                 }
               >
                 {nasaDataStatus === "loading"
@@ -1157,217 +862,37 @@ export function CleanSpaceGame({
         </Card>
 
         {/* Mission Objectives */}
-        {currentMission && (
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center space-x-2">
-                <Target className="w-5 h-5 text-yellow-400" />
-                <span>Mission Objectives</span>
-                <Badge className="bg-blue-500/20 text-blue-400 border-blue-500/50">
-                  {missionObjectives.filter((obj) => obj.isCompleted).length}/
-                  {missionObjectives.length} Complete
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <CheckCircle className="w-5 h-5 text-yellow-400" />
+              <span>Mission Objectives</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
+                <span className="text-gray-300">Reduce AQI below 50</span>
+                <Badge variant={airQuality.aqi < 50 ? "success" : "secondary"}>
+                  {airQuality.aqi < 50 ? "Complete" : "In Progress"}
                 </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {missionObjectives.map((objective) => (
-                  <motion.div
-                    key={objective.id}
-                    className={`flex items-center justify-between p-3 rounded-lg border transition-all ${
-                      objective.isCompleted
-                        ? "bg-green-500/10 border-green-500/30"
-                        : "bg-gray-800/30 border-gray-700/50"
-                    }`}
-                    animate={{
-                      scale: objective.isCompleted ? [1, 1.02, 1] : 1,
-                    }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="flex items-center space-x-3">
-                      {objective.isCompleted ? (
-                        <CheckCircle className="w-5 h-5 text-green-400" />
-                      ) : (
-                        <div className="w-5 h-5 border-2 border-gray-500 rounded-full" />
-                      )}
-                      <span
-                        className={`${
-                          objective.isCompleted
-                            ? "text-green-300"
-                            : "text-gray-300"
-                        }`}
-                      >
-                        {objective.description}
-                      </span>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <Badge
-                        variant="outline"
-                        className={
-                          objective.isCompleted
-                            ? "text-green-400 border-green-500/50"
-                            : "text-gray-400"
-                        }
-                      >
-                        {objective.current}/{objective.target}
-                      </Badge>
-                      <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
-                        +{objective.points} pts
-                      </Badge>
-                    </div>
-                  </motion.div>
-                ))}
               </div>
-            </CardContent>
-          </Card>
-        )}
+              <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
+                <span className="text-gray-300">Maintain health above 80%</span>
+                <Badge variant={player.health > 80 ? "success" : "secondary"}>
+                  {player.health > 80 ? "Complete" : "In Progress"}
+                </Badge>
+              </div>
+              <div className="flex items-center justify-between p-3 bg-gray-800/30 rounded-lg">
+                <span className="text-gray-300">Score 500+ points</span>
+                <Badge variant={score >= 500 ? "success" : "secondary"}>
+                  {score >= 500 ? "Complete" : `${score}/500`}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
       </div>
-
-      {/* AI Game Assistant - Simplified */}
-      {currentMission && isGameActive && (
-        <motion.div
-          initial={{ scale: 0 }}
-          animate={{ scale: 1 }}
-          className="fixed bottom-6 left-6 z-50"
-        >
-          <Button
-            onClick={() => {
-              // Simple AI tips based on current state
-              if (airQuality.aqi > 100) {
-                alert(
-                  "💡 AI Tip: AQI is high! Consider planting trees or removing vehicles to improve air quality."
-                );
-              } else if (player.health < 50) {
-                alert(
-                  "⚠️ AI Warning: Your health is low! Move to a cleaner area or take protective actions."
-                );
-              } else if (player.credits < 20) {
-                alert(
-                  "💰 AI Advice: Credits are running low! Focus on low-cost actions like removing vehicles."
-                );
-              } else {
-                alert(
-                  "🎯 AI Strategy: You're doing well! Keep monitoring objectives and maintain your current approach."
-                );
-              }
-            }}
-            className="w-14 h-14 rounded-full bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-400 hover:to-pink-400 shadow-lg pulse-glow"
-          >
-            <Bot className="w-6 h-6" />
-          </Button>
-        </motion.div>
-      )}
-
-      {/* Mission Completion Modal */}
-      <AnimatePresence>
-        {showMissionComplete && missionResults && currentMission && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-          >
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="max-w-2xl w-full"
-            >
-              <Card className="glass-morphism glow-border">
-                <CardHeader className="text-center">
-                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <Trophy className="w-8 h-8 text-white" />
-                  </div>
-                  <CardTitle className="text-3xl text-gradient mb-2">
-                    Mission Complete!
-                  </CardTitle>
-                  <p className="text-xl text-cyan-400">
-                    {currentMission.title}
-                  </p>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                  {/* Mission Results */}
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="text-center p-4 rounded-lg bg-green-500/10 border border-green-500/30">
-                      <div className="text-3xl font-bold text-green-400 mb-1">
-                        {missionResults.score.toLocaleString()}
-                      </div>
-                      <div className="text-sm text-gray-400">Final Score</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-blue-500/10 border border-blue-500/30">
-                      <div className="text-3xl font-bold text-blue-400 mb-1">
-                        {Math.floor(missionResults.completionTime / 60)}:
-                        {(missionResults.completionTime % 60)
-                          .toString()
-                          .padStart(2, "0")}
-                      </div>
-                      <div className="text-sm text-gray-400">
-                        Completion Time
-                      </div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                      <div className="text-3xl font-bold text-purple-400 mb-1">
-                        {missionResults.objectivesCompleted}/
-                        {missionResults.totalObjectives}
-                      </div>
-                      <div className="text-sm text-gray-400">Objectives</div>
-                    </div>
-                    <div className="text-center p-4 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                      <div className="text-3xl font-bold text-yellow-400 mb-1">
-                        +{missionResults.bonusPoints}
-                      </div>
-                      <div className="text-sm text-gray-400">Bonus Points</div>
-                    </div>
-                  </div>
-
-                  {/* Rewards */}
-                  <div>
-                    <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                      Mission Rewards
-                    </h3>
-                    <div className="grid grid-cols-3 gap-4">
-                      <div className="text-center p-3 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
-                        <Star className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
-                        <div className="text-lg font-bold text-yellow-400">
-                          +{currentMission.rewards.xp}
-                        </div>
-                        <div className="text-xs text-gray-400">Experience</div>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-green-500/10 border border-green-500/30">
-                        <Trophy className="w-6 h-6 text-green-400 mx-auto mb-1" />
-                        <div className="text-lg font-bold text-green-400">
-                          +{currentMission.rewards.credits}
-                        </div>
-                        <div className="text-xs text-gray-400">Credits</div>
-                      </div>
-                      <div className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
-                        <Award className="w-6 h-6 text-purple-400 mx-auto mb-1" />
-                        <div className="text-lg font-bold text-purple-400">
-                          {currentMission.rewards.achievements.length}
-                        </div>
-                        <div className="text-xs text-gray-400">
-                          Achievements
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Action Buttons */}
-                  <div className="flex items-center justify-center space-x-4 pt-4">
-                    <Button
-                      onClick={handleMissionCompleteClose}
-                      className="bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0 pulse-glow"
-                    >
-                      Continue to Next Mission
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
     </div>
-    // </div>
   );
 }

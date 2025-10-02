@@ -1,0 +1,152 @@
+import React, { createContext, useContext, useState, useEffect } from "react";
+import { User } from "../types";
+
+interface AuthContextType {
+  user: User | null;
+  login: (email: string, password: string) => Promise<void>;
+  register: (
+    username: string,
+    email: string,
+    password: string
+  ) => Promise<void>;
+  logout: () => void;
+  updateProfile: (updates: Partial<User>) => Promise<void>;
+  loading: boolean;
+}
+
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
+
+export function useAuth() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+}
+
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Check for existing session
+    const savedUser = localStorage.getItem("airquest_user");
+    if (savedUser) {
+      try {
+        const parsedUser = JSON.parse(savedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Error parsing saved user:", error);
+        localStorage.removeItem("airquest_user");
+      }
+    }
+    setLoading(false);
+  }, []);
+
+  const login = async (email: string, password: string) => {
+    setLoading(true);
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      // For demo purposes, accept any email/password combination
+      const mockUser: User = {
+        id: Date.now().toString(),
+        username: email.split("@")[0] || "AtmosphereExplorer",
+        email,
+        level: 15,
+        totalXP: 15420,
+        globalRank: 247,
+        joinDate: new Date("2024-01-15"),
+        preferences: {
+          theme: "dark",
+          language: "en",
+          notifications: {
+            email: true,
+            push: true,
+            weeklyInsights: true,
+            missionReminders: true,
+          },
+          apiConnections: {
+            nasa: true,
+            gemini: true,
+          },
+        },
+      };
+
+      setUser(mockUser);
+      localStorage.setItem("airquest_user", JSON.stringify(mockUser));
+    } catch (error) {
+      throw new Error("Login failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const register = async (
+    username: string,
+    email: string,
+    password: string
+  ) => {
+    setLoading(true);
+    try {
+      // Simulate API call delay
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      const newUser: User = {
+        id: Date.now().toString(),
+        username,
+        email,
+        level: 1,
+        totalXP: 0,
+        globalRank: 999999,
+        joinDate: new Date(),
+        preferences: {
+          theme: "dark",
+          language: "en",
+          notifications: {
+            email: true,
+            push: true,
+            weeklyInsights: true,
+            missionReminders: true,
+          },
+          apiConnections: {
+            nasa: false,
+            gemini: false,
+          },
+        },
+      };
+
+      setUser(newUser);
+      localStorage.setItem("airquest_user", JSON.stringify(newUser));
+    } catch (error) {
+      throw new Error("Registration failed");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const logout = () => {
+    setUser(null);
+    localStorage.removeItem("airquest_user");
+  };
+
+  const updateProfile = async (updates: Partial<User>) => {
+    if (!user) return;
+
+    const updatedUser = { ...user, ...updates };
+    setUser(updatedUser);
+    localStorage.setItem("airquest_user", JSON.stringify(updatedUser));
+  };
+
+  const value = {
+    user,
+    login,
+    register,
+    logout,
+    updateProfile,
+    loading,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
