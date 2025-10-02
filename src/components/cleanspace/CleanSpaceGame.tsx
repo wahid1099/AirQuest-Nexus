@@ -20,29 +20,12 @@ import {
   RotateCcw,
   Navigation,
   Crosshair,
+  Trophy,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-// Enhanced Progress component with cosmic theme
-const Progress = ({
-  value,
-  className,
-}: {
-  value: number;
-  className?: string;
-}) => (
-  <div
-    className={`w-full bg-gray-800/50 rounded-full h-2 ${className} relative overflow-hidden`}
-  >
-    <div
-      className="bg-gradient-to-r from-cyan-500 to-purple-500 h-2 rounded-full transition-all duration-300 relative"
-      style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-    >
-      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
-    </div>
-  </div>
-);
+import { Progress } from "../ui/progress";
 import {
   GameLocation,
   PlayerState,
@@ -57,10 +40,20 @@ import {
   SimulationEngine,
   defaultGameConfig,
 } from "../../services/simulationEngine";
+import { MissionSelector } from "./MissionSelector";
+import { MissionLevel } from "../../data/missionLevels";
 
 interface CleanSpaceGameProps {
   selectedLocation?: GameLocation;
   onLocationSelect?: (location: GameLocation) => void;
+}
+
+interface UserProgress {
+  completedMissions: string[];
+  totalScore: number;
+  unlockedAchievements: string[];
+  currentLevel: number;
+  totalXP: number;
 }
 
 const mockLocations: GameLocation[] = [
@@ -173,9 +166,29 @@ export function CleanSpaceGame({
   );
   const [userLocation, setUserLocation] = useState<GameLocation | null>(null);
   const [isLoadingLocation, setIsLoadingLocation] = useState(false);
+  const [showMissionSelector, setShowMissionSelector] = useState(true);
+  const [currentMission, setCurrentMission] = useState<MissionLevel | null>(null);
+  const [userProgress, setUserProgress] = useState<UserProgress>({
+    completedMissions: [],
+    totalScore: 0,
+    unlockedAchievements: [],
+    currentLevel: 1,
+    totalXP: 0,
+  });
+  const [missionObjectives, setMissionObjectives] = useState<Array<{
+    id: string;
+    type: string;
+    target: number;
+    current: number;
+    description: string;
+    points: number;
+    isCompleted: boolean;
+  }>>([]);
+  const [missionStartTime, setMissionStartTime] = useState<number | null>(null);
 
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateRef = useRef<number>(Date.now());
+  // Remove unused missionTimerRef
 
   // Get user's current location
   const getCurrentLocation = () => {
@@ -210,7 +223,111 @@ export function CleanSpaceGame({
   // Get user location on component mount
   useEffect(() => {
     getCurrentLocation();
+    loadUserProgress();
   }, []);
+
+  // Load user progress from localStorage or API
+  const loadUserProgress = () => {
+    const savedProgress = localStorage.getItem('cleanspace_progress');
+    if (savedProgress) {
+      setUserProgress(JSON.parse(savedProgress));
+    }
+  };
+
+  // Save user progress
+  const saveUserProgress = (progress: UserProgress) => {
+    localStorage.setItem('cleanspace_progress', JSON.stringify(progress));
+    setUserProgress(progress);
+  };
+
+  // Handle mission selection
+  const handleMissionSelect = (mission: MissionLevel) => {
+    setCurrentMission(mission);
+    setCurrentLocation(mission.location);
+    setShowMissionSelector(false);
+    setShowLocationSelector(false);
+    setMissionObjectives(mission.objectives.map(obj => ({ ...obj, current: 0 })));
+    setMissionStartTime(Date.now());
+    
+    // Initialize player with mission-specific credits
+    const missionPlayer: PlayerState = {
+      id: "player1",
+      health: 100,
+      energy: 100,
+      credits: mission.initialCredits,
+      disguise: "asthma_patient",
+      location: mission.location,
+      safeTimeRemaining: mission.estimatedTime * 60, // Convert to seconds
+      isInSafeZone: false,
+      inventory: {
+        saplings: 10,
+        credits: mission.initialCredits,
+        tools: ["shovel", "watering_can"],
+        upgrades: [],
+      },
+    };
+    
+    setPlayer(missionPlayer);
+  };
+
+  // Complete mission and award rewards
+  const completeMission = useCallback(() => {
+    if (!currentMission || !missionStartTime) return;
+
+    const completionTime = (Date.now() - missionStartTime) / 1000; // in seconds
+    const totalScore = missionObjectives.reduce((sum, obj) => sum + (obj.isCompleted ? obj.points : 0), 0);
+
+    // Calculate bonus points for time
+    const timeBonus = completionTime < (currentMission.estimatedTime * 60) ? 100 : 0;
+    const finalScore = totalScore + timeBonus;
+
+    // Update user progress
+    const newProgress: UserProgress = {
+      ...userProgress,
+      completedMissions: [...userProgress.completedMissions, currentMission.id],
+      totalScore: userProgress.totalScore + finalScore,
+      totalXP: userProgress.totalXP + currentMission.rewards.xp,
+      unlockedAchievements: [...userProgress.unlockedAchievements, ...currentMission.rewards.achievements],
+    };
+
+    saveUserProgress(newProgress);
+    
+    // Show completion modal or return to mission selector
+    setTimeout(() => {
+      setShowMissionSelector(true);
+      setCurrentMission(null);
+      setIsGameActive(false);
+    }, 3000);
+  }, [currentMission, missionStartTime, missionObjectives, userProgress]);
+
+  // Check mission completion
+  const checkMissionCompletion = useCallback(() => {
+    if (!currentMission || !missionObjectives.length) return;
+
+    const completedObjectives = missionObjectives.filter(obj => obj.isCompleted);
+    const allCompleted = completedObjectives.length === missionObjectives.length;
+
+    if (allCompleted && !currentMission.isCompleted) {
+      completeMission();
+    }
+  }, [currentMission, missionObjectives, completeMission]);
+
+  // Update mission objectives based on game actions
+  const updateMissionObjectives = useCallback((actionType: string, value: number = 1) => {
+    if (!currentMission) return;
+
+    setMissionObjectives(prev => prev.map(obj => {
+      if (obj.type === actionType && !obj.isCompleted) {
+        const newCurrent = Math.min(obj.current + value, obj.target);
+        return {
+          ...obj,
+          current: newCurrent,
+          isCompleted: newCurrent >= obj.target
+        };
+      }
+      return obj;
+    }));
+  }, [currentMission]);
 
   const initializeGame = useCallback(async () => {
     if (!currentLocation) return;
@@ -398,6 +515,16 @@ export function CleanSpaceGame({
     );
     setHealthPrecautions(newPrecautions);
 
+    // Update mission objectives
+    if (actionId === "plant_tree" || actionId === "plant_rooftop_garden") {
+      updateMissionObjectives("plant_trees", 1);
+    } else if (actionId === "remove_vehicle" || actionId === "shutdown_factory" || actionId === "retrofit_factory") {
+      updateMissionObjectives("remove_pollution", 1);
+    }
+    
+    // Check if AQI objective is met
+    updateMissionObjectives("reduce_aqi", newAirQuality.aqi);
+
     // Action completed successfully
   };
 
@@ -423,6 +550,11 @@ export function CleanSpaceGame({
     }
   }, [isGameActive, isPaused, player, updateGame]);
 
+  // Check mission completion when objectives change
+  useEffect(() => {
+    checkMissionCompletion();
+  }, [missionObjectives, checkMissionCompletion]);
+
   const getAQIColor = (aqi: number) => {
     if (aqi <= 50) return "text-green-400 bg-green-500/20 border-green-500/50";
     if (aqi <= 100)
@@ -443,6 +575,17 @@ export function CleanSpaceGame({
     if (aqi <= 300) return "Very Unhealthy";
     return "Hazardous";
   };
+
+  // Show mission selector if no mission is selected
+  if (showMissionSelector) {
+    return (
+      <MissionSelector
+        onMissionSelect={handleMissionSelect}
+        onBack={() => setShowMissionSelector(false)}
+        userProgress={userProgress}
+      />
+    );
+  }
 
   if (showLocationSelector) {
     return (
@@ -968,7 +1111,7 @@ export function CleanSpaceGame({
               </Card>
             </motion.div>
 
-            {/* Mission Status */}
+            {/* Mission Objectives */}
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -977,58 +1120,105 @@ export function CleanSpaceGame({
               <Card className="glass-morphism glow-border">
                 <CardHeader>
                   <CardTitle className="flex items-center space-x-2 text-gradient">
-                    <Clock className="w-5 h-5 text-cyan-400" />
-                    <span>Mission Status</span>
+                    <Target className="w-5 h-5 text-cyan-400" />
+                    <span>Mission Objectives</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
-                  <div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-300">Time Remaining</span>
-                      <span className="text-cyan-400 font-semibold">
-                        {Math.floor(simulationState.timeRemaining / 3600)}h{" "}
-                        {Math.floor(
-                          (simulationState.timeRemaining % 3600) / 60
-                        )}
-                        m
-                      </span>
+                <CardContent className="space-y-3">
+                  {currentMission && (
+                    <>
+                      <div className="mb-4">
+                        <h3 className="text-sm font-semibold text-cyan-400 mb-1">
+                          {currentMission.title}
+                        </h3>
+                        <p className="text-xs text-gray-400">
+                          Level {currentMission.level} • {currentMission.difficulty}
+                        </p>
+                      </div>
+                      
+                      {missionObjectives.map((objective, index) => (
+                        <motion.div
+                          key={objective.id}
+                          className={`p-3 rounded-lg border transition-all ${
+                            objective.isCompleted
+                              ? "bg-green-500/10 border-green-500/30"
+                              : "bg-gray-800/30 border-gray-700/50"
+                          }`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <div className="flex items-center justify-between mb-2">
+                            <div className="flex items-center space-x-2">
+                              {objective.isCompleted ? (
+                                <CheckCircle className="w-4 h-4 text-green-400" />
+                              ) : (
+                                <div className="w-4 h-4 border-2 border-gray-500 rounded-full"></div>
+                              )}
+                              <span className={`text-sm ${
+                                objective.isCompleted ? "text-green-400" : "text-gray-300"
+                              }`}>
+                                {objective.description}
+                              </span>
+                            </div>
+                            <Badge className={`${
+                              objective.isCompleted
+                                ? "bg-green-500/20 text-green-400 border-green-500/50"
+                                : "bg-cyan-500/20 text-cyan-400 border-cyan-500/50"
+                            }`}>
+                              +{objective.points}
+                            </Badge>
+                          </div>
+                          
+                          {objective.type !== "time_limit" && objective.type !== "budget_limit" && (
+                            <div className="space-y-1">
+                              <div className="flex justify-between text-xs">
+                                <span className="text-gray-400">Progress</span>
+                                <span className="text-gray-400">
+                                  {objective.current}/{objective.target}
+                                </span>
+                              </div>
+                              <Progress 
+                                value={(objective.current / objective.target) * 100} 
+                                className="h-2"
+                              />
+                            </div>
+                          )}
+                        </motion.div>
+                      ))}
+                      
+                      {missionStartTime && (
+                        <div className="mt-4 p-3 rounded-lg bg-purple-500/10 border border-purple-500/30">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-2">
+                              <Clock className="w-4 h-4 text-purple-400" />
+                              <span className="text-sm text-gray-300">Mission Time</span>
+                            </div>
+                            <span className="text-sm text-purple-400 font-semibold">
+                              {Math.floor((Date.now() - missionStartTime) / 60000)}:{
+                                Math.floor(((Date.now() - missionStartTime) % 60000) / 1000)
+                                  .toString().padStart(2, '0')
+                              }
+                            </span>
+                          </div>
+                        </div>
+                      )}
+                    </>
+                  )}
+                  
+                  {!currentMission && (
+                    <div className="text-center py-4">
+                      <Trophy className="w-8 h-8 text-gray-500 mx-auto mb-2" />
+                      <p className="text-gray-500 text-sm">No active mission</p>
+                      <Button
+                        size="sm"
+                        onClick={() => setShowMissionSelector(true)}
+                        className="mt-2 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0"
+                      >
+                        Select Mission
+                      </Button>
                     </div>
-                    <Progress
-                      value={
-                        (simulationState.timeRemaining /
-                          defaultGameConfig.missionTimeLimit) *
-                        100
-                      }
-                      className="h-3"
-                    />
-                  </div>
-                  <div className="p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30">
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-300">Target AQI</span>
-                      <span className="text-green-400 font-semibold">
-                        {simulationState.targetAQI}
-                      </span>
-                    </div>
-                    <div className="flex justify-between text-sm mb-1">
-                      <span className="text-gray-300">Current AQI</span>
-                      <span className="text-orange-400 font-semibold">
-                        {simulationState.currentAQI}
-                      </span>
-                    </div>
-                  </div>
-                  <div className="text-center">
-                    {simulationState.currentAQI <= simulationState.targetAQI ? (
-                      <Badge className="bg-green-500/20 text-green-400 border-green-500/50 pulse-glow">
-                        <CheckCircle className="w-4 h-4 mr-1" />
-                        Mission Complete!
-                      </Badge>
-                    ) : (
-                      <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50">
-                        <Target className="w-4 h-4 mr-1" />
-                        In Progress
-                      </Badge>
-                    )}
-                  </div>
+                  )}
                 </CardContent>
               </Card>
             </motion.div>
