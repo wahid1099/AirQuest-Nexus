@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion } from "motion/react";
 import {
   MapPin,
@@ -18,11 +18,13 @@ import {
   Play,
   Pause,
   RotateCcw,
+  Navigation,
+  Crosshair,
 } from "lucide-react";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 import { Badge } from "../ui/badge";
-// Simple Progress component replacement
+// Enhanced Progress component with cosmic theme
 const Progress = ({
   value,
   className,
@@ -30,11 +32,15 @@ const Progress = ({
   value: number;
   className?: string;
 }) => (
-  <div className={`w-full bg-gray-700 rounded-full h-2 ${className}`}>
+  <div
+    className={`w-full bg-gray-800/50 rounded-full h-2 ${className} relative overflow-hidden`}
+  >
     <div
-      className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+      className="bg-gradient-to-r from-cyan-500 to-purple-500 h-2 rounded-full transition-all duration-300 relative"
       style={{ width: `${Math.min(100, Math.max(0, value))}%` }}
-    />
+    >
+      <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse"></div>
+    </div>
   </div>
 );
 import {
@@ -160,38 +166,53 @@ export function CleanSpaceGame({
     useState<HealthPrecaution | null>(null);
   const [isGameActive, setIsGameActive] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const [selectedAction, setSelectedAction] = useState<string | null>(null);
+  // Remove unused selectedAction state
   const [gameEngine] = useState(() => new SimulationEngine(defaultGameConfig));
   const [showLocationSelector, setShowLocationSelector] = useState(
     !selectedLocation
   );
+  const [userLocation, setUserLocation] = useState<GameLocation | null>(null);
+  const [isLoadingLocation, setIsLoadingLocation] = useState(false);
 
   const gameLoopRef = useRef<NodeJS.Timeout | null>(null);
   const lastUpdateRef = useRef<number>(Date.now());
 
-  // Initialize game when location is selected
-  useEffect(() => {
-    if (currentLocation && !player) {
-      initializeGame();
-    }
-  }, [currentLocation]);
-
-  // Game loop
-  useEffect(() => {
-    if (isGameActive && !isPaused && player) {
-      gameLoopRef.current = setInterval(() => {
-        updateGame();
-      }, 1000); // Update every second
-
-      return () => {
-        if (gameLoopRef.current) {
-          clearInterval(gameLoopRef.current);
+  // Get user's current location
+  const getCurrentLocation = () => {
+    setIsLoadingLocation(true);
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          const userLoc: GameLocation = {
+            id: "current",
+            name: "Current Location",
+            latitude,
+            longitude,
+            regionSize: 5,
+            city: "Your Location",
+            country: "Current",
+          };
+          setUserLocation(userLoc);
+          setIsLoadingLocation(false);
+        },
+        (error) => {
+          console.error("Error getting location:", error);
+          setIsLoadingLocation(false);
         }
-      };
+      );
+    } else {
+      console.error("Geolocation is not supported by this browser.");
+      setIsLoadingLocation(false);
     }
-  }, [isGameActive, isPaused, player]);
+  };
 
-  const initializeGame = async () => {
+  // Get user location on component mount
+  useEffect(() => {
+    getCurrentLocation();
+  }, []);
+
+  const initializeGame = useCallback(async () => {
     if (!currentLocation) return;
 
     try {
@@ -262,9 +283,9 @@ export function CleanSpaceGame({
     } catch (error) {
       console.error("Error initializing game:", error);
     }
-  };
+  }, [currentLocation]);
 
-  const updateGame = () => {
+  const updateGame = useCallback(() => {
     if (!player || !airQuality) return;
 
     const now = Date.now();
@@ -290,7 +311,7 @@ export function CleanSpaceGame({
       setIsGameActive(false);
       // Show failure message
     }
-  };
+  }, [player, airQuality, gameEngine]);
 
   const startGame = () => {
     setIsGameActive(true);
@@ -336,7 +357,12 @@ export function CleanSpaceGame({
     // Create game action
     const action: GameAction = {
       id: `action_${Date.now()}`,
-      type: actionId as any,
+      type: actionId as
+        | "plant_tree"
+        | "plant_rooftop_garden"
+        | "remove_vehicle"
+        | "shutdown_factory"
+        | "retrofit_factory",
       location: {
         latitude: currentLocation!.latitude + (Math.random() - 0.5) * 0.01,
         longitude: currentLocation!.longitude + (Math.random() - 0.5) * 0.01,
@@ -372,16 +398,41 @@ export function CleanSpaceGame({
     );
     setHealthPrecautions(newPrecautions);
 
-    setSelectedAction(null);
+    // Action completed successfully
   };
 
+  // Initialize game when location is selected
+  useEffect(() => {
+    if (currentLocation && !player) {
+      initializeGame();
+    }
+  }, [currentLocation, player, initializeGame]);
+
+  // Game loop
+  useEffect(() => {
+    if (isGameActive && !isPaused && player) {
+      gameLoopRef.current = setInterval(() => {
+        updateGame();
+      }, 1000); // Update every second
+
+      return () => {
+        if (gameLoopRef.current) {
+          clearInterval(gameLoopRef.current);
+        }
+      };
+    }
+  }, [isGameActive, isPaused, player, updateGame]);
+
   const getAQIColor = (aqi: number) => {
-    if (aqi <= 50) return "text-green-500 bg-green-100";
-    if (aqi <= 100) return "text-yellow-500 bg-yellow-100";
-    if (aqi <= 150) return "text-orange-500 bg-orange-100";
-    if (aqi <= 200) return "text-red-500 bg-red-100";
-    if (aqi <= 300) return "text-purple-500 bg-purple-100";
-    return "text-red-800 bg-red-200";
+    if (aqi <= 50) return "text-green-400 bg-green-500/20 border-green-500/50";
+    if (aqi <= 100)
+      return "text-yellow-400 bg-yellow-500/20 border-yellow-500/50";
+    if (aqi <= 150)
+      return "text-orange-400 bg-orange-500/20 border-orange-500/50";
+    if (aqi <= 200) return "text-red-400 bg-red-500/20 border-red-500/50";
+    if (aqi <= 300)
+      return "text-purple-400 bg-purple-500/20 border-purple-500/50";
+    return "text-red-300 bg-red-600/20 border-red-600/50";
   };
 
   const getAQILevel = (aqi: number) => {
@@ -395,45 +446,130 @@ export function CleanSpaceGame({
 
   if (showLocationSelector) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 p-4">
+      <div className="min-h-screen cosmic-gradient p-4">
         <div className="max-w-4xl mx-auto">
           <div className="text-center mb-8">
-            <h1 className="text-4xl font-bold text-gray-800 mb-4">
-              CleanSpace
-            </h1>
-            <p className="text-lg text-gray-600 mb-8">
+            <motion.h1
+              className="text-4xl font-bold text-gradient mb-4"
+              initial={{ opacity: 0, y: -20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+            >
+              CleanSpace Mission
+            </motion.h1>
+            <motion.p
+              className="text-lg text-gray-300 mb-8"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+            >
               Choose a location to start your air quality improvement mission
+            </motion.p>
+          </div>
+
+          {/* Current Location Option */}
+          {userLocation && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.5 }}
+              className="mb-6"
+            >
+              <Card className="glass-morphism glow-border hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-cyan-500 to-purple-500 rounded-full flex items-center justify-center pulse-glow">
+                      <Crosshair className="w-6 h-6 text-white" />
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="text-xl font-semibold text-cyan-400">
+                        {userLocation.name}
+                      </h3>
+                      <p className="text-gray-300">
+                        {userLocation.city}, {userLocation.country}
+                      </p>
+                      <p className="text-sm text-gray-400">
+                        Lat: {userLocation.latitude.toFixed(4)}, Lng:{" "}
+                        {userLocation.longitude.toFixed(4)}
+                      </p>
+                    </div>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                      Current
+                    </Badge>
+                  </div>
+                  <Button
+                    onClick={() => selectLocation(userLocation)}
+                    className="w-full mt-4 bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0"
+                  >
+                    <Navigation className="w-4 h-4 mr-2" />
+                    Use Current Location
+                  </Button>
+                </CardContent>
+              </Card>
+            </motion.div>
+          )}
+
+          {/* Get Location Button */}
+          {!userLocation && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="mb-6 text-center"
+            >
+              <Button
+                onClick={getCurrentLocation}
+                disabled={isLoadingLocation}
+                className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0"
+              >
+                {isLoadingLocation ? (
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                ) : (
+                  <Crosshair className="w-4 h-4 mr-2" />
+                )}
+                {isLoadingLocation
+                  ? "Getting Location..."
+                  : "Use My Current Location"}
+              </Button>
+            </motion.div>
+          )}
+
+          <div className="text-center mb-4">
+            <p className="text-gray-400 text-sm">
+              Or choose from popular locations:
             </p>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mockLocations.map((location) => (
+            {mockLocations.map((location, index) => (
               <motion.div
                 key={location.id}
-                whileHover={{ scale: 1.02 }}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: index * 0.1 }}
+                whileHover={{ scale: 1.02, y: -5 }}
                 whileTap={{ scale: 0.98 }}
               >
-                <Card className="cursor-pointer hover:shadow-lg transition-shadow">
+                <Card className="glass-morphism glow-border hover:shadow-lg hover:shadow-cyan-500/20 transition-all cursor-pointer group">
                   <CardContent className="p-6">
                     <div className="flex items-center space-x-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
-                        <MapPin className="w-6 h-6 text-blue-600" />
+                      <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <MapPin className="w-6 h-6 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-semibold text-gray-800">
+                        <h3 className="text-xl font-semibold text-gray-100 group-hover:text-cyan-400 transition-colors">
                           {location.name}
                         </h3>
-                        <p className="text-gray-600">
+                        <p className="text-gray-300">
                           {location.city}, {location.country}
                         </p>
-                        <p className="text-sm text-gray-500">
+                        <p className="text-sm text-gray-400">
                           Region: {location.regionSize}km
                         </p>
                       </div>
                     </div>
                     <Button
                       onClick={() => selectLocation(location)}
-                      className="w-full mt-4"
+                      className="w-full mt-4 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white border-0"
                     >
                       Select Location
                     </Button>
@@ -449,48 +585,93 @@ export function CleanSpaceGame({
 
   if (!player || !airQuality || !weather || !simulationState) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Loading game data...</p>
-        </div>
+      <div className="min-h-screen cosmic-gradient flex items-center justify-center">
+        <motion.div
+          className="text-center"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <div className="relative mb-6">
+            <div className="animate-spin rounded-full h-16 w-16 border-4 border-transparent border-t-cyan-500 border-r-purple-500 mx-auto"></div>
+            <div className="absolute inset-0 animate-ping rounded-full h-16 w-16 border-4 border-cyan-500/20 mx-auto"></div>
+          </div>
+          <p className="text-gray-300 text-lg mb-2">
+            Initializing CleanSpace Mission
+          </p>
+          <p className="text-gray-400 text-sm">
+            Loading NASA satellite data...
+          </p>
+          <div className="mt-4 flex justify-center space-x-1">
+            {[0, 1, 2].map((i) => (
+              <motion.div
+                key={i}
+                className="w-2 h-2 bg-cyan-500 rounded-full"
+                animate={{ opacity: [0.3, 1, 0.3] }}
+                transition={{ duration: 1.5, repeat: Infinity, delay: i * 0.2 }}
+              />
+            ))}
+          </div>
+        </motion.div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
+    <div className="min-h-screen cosmic-gradient">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b">
+      <div className="glass-morphism border-b border-gray-700/50">
         <div className="max-w-7xl mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-2xl font-bold text-gray-800">CleanSpace</h1>
-              <p className="text-gray-600">{currentLocation?.name}</p>
+              <h1 className="text-2xl font-bold text-gradient">
+                CleanSpace Mission
+              </h1>
+              <div className="flex items-center space-x-2">
+                <MapPin className="w-4 h-4 text-cyan-400" />
+                <p className="text-gray-300">{currentLocation?.name}</p>
+                {currentLocation?.id === "current" && (
+                  <Badge className="bg-green-500/20 text-green-400 border-green-500/50 text-xs">
+                    Live
+                  </Badge>
+                )}
+              </div>
             </div>
             <div className="flex items-center space-x-4">
               <Button
                 variant="outline"
                 onClick={() => setShowLocationSelector(true)}
+                className="border-cyan-500/50 text-cyan-400 hover:bg-cyan-500/10 hover:border-cyan-400"
               >
                 <MapPin className="w-4 h-4 mr-2" />
                 Change Location
               </Button>
               {!isGameActive ? (
-                <Button onClick={startGame}>
+                <Button
+                  onClick={startGame}
+                  className="bg-gradient-to-r from-green-500 to-emerald-500 hover:from-green-600 hover:to-emerald-600 text-white border-0 pulse-glow"
+                >
                   <Play className="w-4 h-4 mr-2" />
                   Start Mission
                 </Button>
               ) : (
                 <div className="flex space-x-2">
-                  <Button variant="outline" onClick={pauseGame}>
+                  <Button
+                    variant="outline"
+                    onClick={pauseGame}
+                    className="border-purple-500/50 text-purple-400 hover:bg-purple-500/10 hover:border-purple-400"
+                  >
                     {isPaused ? (
                       <Play className="w-4 h-4" />
                     ) : (
                       <Pause className="w-4 h-4" />
                     )}
                   </Button>
-                  <Button variant="outline" onClick={resetGame}>
+                  <Button
+                    variant="outline"
+                    onClick={resetGame}
+                    className="border-red-500/50 text-red-400 hover:bg-red-500/10 hover:border-red-400"
+                  >
                     <RotateCcw className="w-4 h-4" />
                   </Button>
                 </div>
@@ -505,281 +686,392 @@ export function CleanSpaceGame({
           {/* Main Game Area */}
           <div className="lg:col-span-3 space-y-6">
             {/* Air Quality Dashboard */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Target className="w-5 h-5" />
-                  <span>Air Quality Status</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="text-center">
-                    <div
-                      className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold ${getAQIColor(
-                        airQuality.aqi
-                      )}`}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-gradient">
+                    <Target className="w-5 h-5 text-cyan-400" />
+                    <span>Air Quality Status</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    <motion.div
+                      className="text-center"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
                     >
-                      AQI: {airQuality.aqi}
-                    </div>
-                    <p className="text-sm text-gray-600 mt-2">
-                      {getAQILevel(airQuality.aqi)}
-                    </p>
+                      <div
+                        className={`inline-flex items-center px-4 py-2 rounded-full text-lg font-bold border-2 ${getAQIColor(
+                          airQuality.aqi
+                        )} pulse-glow`}
+                      >
+                        AQI: {airQuality.aqi}
+                      </div>
+                      <p className="text-sm text-gray-300 mt-2">
+                        {getAQILevel(airQuality.aqi)}
+                      </p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <div className="text-2xl font-bold text-cyan-400">
+                        {airQuality.pm25.toFixed(1)} µg/m³
+                      </div>
+                      <p className="text-sm text-gray-400">PM2.5</p>
+                    </motion.div>
+                    <motion.div
+                      className="text-center"
+                      whileHover={{ scale: 1.05 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <div className="text-2xl font-bold text-purple-400">
+                        {airQuality.no2.toFixed(1)} ppb
+                      </div>
+                      <p className="text-sm text-gray-400">NO₂</p>
+                    </motion.div>
                   </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">
-                      {airQuality.pm25.toFixed(1)} µg/m³
-                    </div>
-                    <p className="text-sm text-gray-600">PM2.5</p>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-gray-800">
-                      {airQuality.no2.toFixed(1)} ppb
-                    </div>
-                    <p className="text-sm text-gray-600">NO₂</p>
-                  </div>
-                </div>
 
-                {healthPrecautions && (
-                  <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <div className="flex items-center space-x-2 mb-2">
-                      <AlertTriangle className="w-5 h-5 text-yellow-600" />
-                      <span className="font-semibold text-yellow-800">
-                        Health Advisory
-                      </span>
-                    </div>
-                    <p className="text-yellow-700 mb-2">
-                      {healthPrecautions.message}
-                    </p>
-                    <ul className="text-sm text-yellow-600 space-y-1">
-                      {healthPrecautions.recommendations.map((rec, index) => (
-                        <li key={index}>• {rec}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                  {healthPrecautions && (
+                    <motion.div
+                      className="mt-4 p-4 bg-yellow-500/10 border border-yellow-500/30 rounded-lg backdrop-blur-sm"
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-center space-x-2 mb-2">
+                        <AlertTriangle className="w-5 h-5 text-yellow-400" />
+                        <span className="font-semibold text-yellow-300">
+                          Health Advisory
+                        </span>
+                      </div>
+                      <p className="text-yellow-200 mb-2">
+                        {healthPrecautions.message}
+                      </p>
+                      <ul className="text-sm text-yellow-300 space-y-1">
+                        {healthPrecautions.recommendations.map((rec, index) => (
+                          <li key={index}>• {rec}</li>
+                        ))}
+                      </ul>
+                    </motion.div>
+                  )}
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Weather Information */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Wind className="w-5 h-5" />
-                  <span>Weather Conditions</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                  <div className="text-center">
-                    <Thermometer className="w-6 h-6 text-red-500 mx-auto mb-2" />
-                    <div className="text-xl font-bold">
-                      {weather.temperature.toFixed(1)}°C
-                    </div>
-                    <div className="text-sm text-gray-600">Temperature</div>
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.1 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-gradient">
+                    <Wind className="w-5 h-5 text-cyan-400" />
+                    <span>Weather Conditions</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <motion.div
+                      className="text-center p-3 rounded-lg bg-red-500/10 border border-red-500/30"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Thermometer className="w-6 h-6 text-red-400 mx-auto mb-2" />
+                      <div className="text-xl font-bold text-red-300">
+                        {weather.temperature.toFixed(1)}°C
+                      </div>
+                      <div className="text-sm text-gray-400">Temperature</div>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-3 rounded-lg bg-blue-500/10 border border-blue-500/30"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Droplets className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                      <div className="text-xl font-bold text-blue-300">
+                        {weather.humidity.toFixed(0)}%
+                      </div>
+                      <div className="text-sm text-gray-400">Humidity</div>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-3 rounded-lg bg-cyan-500/10 border border-cyan-500/30"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Wind className="w-6 h-6 text-cyan-400 mx-auto mb-2" />
+                      <div className="text-xl font-bold text-cyan-300">
+                        {weather.windSpeed.toFixed(1)} m/s
+                      </div>
+                      <div className="text-sm text-gray-400">Wind Speed</div>
+                    </motion.div>
+                    <motion.div
+                      className="text-center p-3 rounded-lg bg-purple-500/10 border border-purple-500/30"
+                      whileHover={{ scale: 1.05, y: -2 }}
+                      transition={{ type: "spring", stiffness: 300 }}
+                    >
+                      <Eye className="w-6 h-6 text-purple-400 mx-auto mb-2" />
+                      <div className="text-xl font-bold text-purple-300">
+                        {weather.visibility.toFixed(1)} km
+                      </div>
+                      <div className="text-sm text-gray-400">Visibility</div>
+                    </motion.div>
                   </div>
-                  <div className="text-center">
-                    <Droplets className="w-6 h-6 text-blue-500 mx-auto mb-2" />
-                    <div className="text-xl font-bold">
-                      {weather.humidity.toFixed(0)}%
-                    </div>
-                    <div className="text-sm text-gray-600">Humidity</div>
-                  </div>
-                  <div className="text-center">
-                    <Wind className="w-6 h-6 text-gray-500 mx-auto mb-2" />
-                    <div className="text-xl font-bold">
-                      {weather.windSpeed.toFixed(1)} m/s
-                    </div>
-                    <div className="text-sm text-gray-600">Wind Speed</div>
-                  </div>
-                  <div className="text-center">
-                    <Eye className="w-6 h-6 text-purple-500 mx-auto mb-2" />
-                    <div className="text-xl font-bold">
-                      {weather.visibility.toFixed(1)} km
-                    </div>
-                    <div className="text-sm text-gray-600">Visibility</div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Action Panel */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Available Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {gameActions.map((action) => {
-                    const Icon = action.icon;
-                    const canAfford = player.credits >= action.cost;
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.5, delay: 0.2 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="text-gradient">
+                    Available Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {gameActions.map((action) => {
+                      const Icon = action.icon;
+                      const canAfford = player.credits >= action.cost;
 
-                    return (
-                      <motion.div
-                        key={action.id}
-                        whileHover={{ scale: 1.02 }}
-                        whileTap={{ scale: 0.98 }}
-                      >
-                        <Card
-                          className={`cursor-pointer transition-all ${
-                            canAfford
-                              ? "hover:shadow-md"
-                              : "opacity-50 cursor-not-allowed"
-                          }`}
-                          onClick={() =>
-                            canAfford && setSelectedAction(action.id)
-                          }
+                      return (
+                        <motion.div
+                          key={action.id}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                         >
-                          <CardContent className="p-4">
-                            <div className="flex items-center space-x-3 mb-3">
-                              <Icon className={`w-6 h-6 ${action.color}`} />
-                              <div>
-                                <h3 className="font-semibold">{action.name}</h3>
-                                <p className="text-sm text-gray-600">
-                                  Cost: {action.cost} credits
-                                </p>
+                          <Card
+                            className={`cursor-pointer transition-all glass-morphism border-2 ${
+                              canAfford
+                                ? "hover:shadow-lg hover:shadow-cyan-500/20 border-cyan-500/30 hover:border-cyan-400/50"
+                                : "opacity-50 cursor-not-allowed border-gray-600/30"
+                            }`}
+                            onClick={() => {
+                              // Action selection handled in execute button
+                            }}
+                          >
+                            <CardContent className="p-4">
+                              <div className="flex items-center space-x-3 mb-3">
+                                <div
+                                  className={`p-2 rounded-lg bg-gradient-to-r ${
+                                    action.id === "plant_tree"
+                                      ? "from-green-500/20 to-emerald-500/20"
+                                      : action.id === "plant_rooftop_garden"
+                                      ? "from-emerald-500/20 to-green-600/20"
+                                      : action.id === "remove_vehicle"
+                                      ? "from-blue-500/20 to-cyan-500/20"
+                                      : action.id === "shutdown_factory"
+                                      ? "from-red-500/20 to-orange-500/20"
+                                      : "from-orange-500/20 to-yellow-500/20"
+                                  }`}
+                                >
+                                  <Icon className={`w-6 h-6 ${action.color}`} />
+                                </div>
+                                <div className="flex-1">
+                                  <h3 className="font-semibold text-gray-100">
+                                    {action.name}
+                                  </h3>
+                                  <p className="text-sm text-gray-400">
+                                    Cost: {action.cost} credits
+                                  </p>
+                                </div>
                               </div>
-                            </div>
-                            <p className="text-sm text-gray-500 mb-3">
-                              {action.description}
-                            </p>
-                            <Button
-                              size="sm"
-                              className="w-full"
-                              disabled={!canAfford}
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                executeAction(action.id);
-                              }}
-                            >
-                              Execute
-                            </Button>
-                          </CardContent>
-                        </Card>
-                      </motion.div>
-                    );
-                  })}
-                </div>
-              </CardContent>
-            </Card>
+                              <p className="text-sm text-gray-300 mb-3">
+                                {action.description}
+                              </p>
+                              <Button
+                                size="sm"
+                                className={`w-full ${
+                                  canAfford
+                                    ? "bg-gradient-to-r from-cyan-500 to-purple-500 hover:from-cyan-600 hover:to-purple-600 text-white border-0"
+                                    : "bg-gray-700 text-gray-400 border-gray-600"
+                                }`}
+                                disabled={!canAfford}
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  executeAction(action.id);
+                                }}
+                              >
+                                Execute
+                              </Button>
+                            </CardContent>
+                          </Card>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
 
           {/* Sidebar */}
           <div className="space-y-6">
             {/* Player Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Heart className="w-5 h-5" />
-                  <span>Player Status</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Health</span>
-                    <span>{player.health.toFixed(0)}%</span>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.3 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-gradient">
+                    <Heart className="w-5 h-5 text-red-400" />
+                    <span>Player Status</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">Health</span>
+                      <span className="text-red-400 font-semibold">
+                        {player.health.toFixed(0)}%
+                      </span>
+                    </div>
+                    <Progress value={player.health} className="h-3" />
                   </div>
-                  <Progress value={player.health} className="h-2" />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Energy</span>
-                    <span>{player.energy.toFixed(0)}%</span>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">Energy</span>
+                      <span className="text-blue-400 font-semibold">
+                        {player.energy.toFixed(0)}%
+                      </span>
+                    </div>
+                    <Progress value={player.energy} className="h-3" />
                   </div>
-                  <Progress value={player.energy} className="h-2" />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Credits</span>
-                  <Badge variant="outline">{player.credits}</Badge>
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-sm">Saplings</span>
-                  <Badge variant="outline">{player.inventory.saplings}</Badge>
-                </div>
-              </CardContent>
-            </Card>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-yellow-500/10 border border-yellow-500/30">
+                    <span className="text-sm text-gray-300">Credits</span>
+                    <Badge className="bg-yellow-500/20 text-yellow-400 border-yellow-500/50">
+                      {player.credits}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-2 rounded-lg bg-green-500/10 border border-green-500/30">
+                    <span className="text-sm text-gray-300">Saplings</span>
+                    <Badge className="bg-green-500/20 text-green-400 border-green-500/50">
+                      {player.inventory.saplings}
+                    </Badge>
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Mission Status */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center space-x-2">
-                  <Clock className="w-5 h-5" />
-                  <span>Mission Status</span>
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Time Remaining</span>
-                    <span>
-                      {Math.floor(simulationState.timeRemaining / 3600)}h{" "}
-                      {Math.floor((simulationState.timeRemaining % 3600) / 60)}m
-                    </span>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="flex items-center space-x-2 text-gradient">
+                    <Clock className="w-5 h-5 text-cyan-400" />
+                    <span>Mission Status</span>
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">Time Remaining</span>
+                      <span className="text-cyan-400 font-semibold">
+                        {Math.floor(simulationState.timeRemaining / 3600)}h{" "}
+                        {Math.floor(
+                          (simulationState.timeRemaining % 3600) / 60
+                        )}
+                        m
+                      </span>
+                    </div>
+                    <Progress
+                      value={
+                        (simulationState.timeRemaining /
+                          defaultGameConfig.missionTimeLimit) *
+                        100
+                      }
+                      className="h-3"
+                    />
                   </div>
-                  <Progress
-                    value={
-                      (simulationState.timeRemaining /
-                        defaultGameConfig.missionTimeLimit) *
-                      100
-                    }
-                    className="h-2"
-                  />
-                </div>
-                <div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Target AQI</span>
-                    <span>{simulationState.targetAQI}</span>
+                  <div className="p-3 rounded-lg bg-gradient-to-r from-cyan-500/10 to-purple-500/10 border border-cyan-500/30">
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">Target AQI</span>
+                      <span className="text-green-400 font-semibold">
+                        {simulationState.targetAQI}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-300">Current AQI</span>
+                      <span className="text-orange-400 font-semibold">
+                        {simulationState.currentAQI}
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-sm mb-1">
-                    <span>Current AQI</span>
-                    <span>{simulationState.currentAQI}</span>
+                  <div className="text-center">
+                    {simulationState.currentAQI <= simulationState.targetAQI ? (
+                      <Badge className="bg-green-500/20 text-green-400 border-green-500/50 pulse-glow">
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Mission Complete!
+                      </Badge>
+                    ) : (
+                      <Badge className="bg-cyan-500/20 text-cyan-400 border-cyan-500/50">
+                        <Target className="w-4 h-4 mr-1" />
+                        In Progress
+                      </Badge>
+                    )}
                   </div>
-                </div>
-                <div className="text-center">
-                  {simulationState.currentAQI <= simulationState.targetAQI ? (
-                    <Badge className="bg-green-100 text-green-800">
-                      <CheckCircle className="w-4 h-4 mr-1" />
-                      Mission Complete!
-                    </Badge>
-                  ) : (
-                    <Badge variant="outline">
-                      <Target className="w-4 h-4 mr-1" />
-                      In Progress
-                    </Badge>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </motion.div>
 
             {/* Recent Actions */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Recent Actions</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {simulationState.actionsApplied
-                    .slice(-5)
-                    .map((action, index) => (
-                      <div
-                        key={index}
-                        className="flex items-center space-x-2 text-sm"
-                      >
-                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                        <span className="text-gray-600">
-                          {action.type.replace("_", " ")}
-                        </span>
-                      </div>
-                    ))}
-                  {simulationState.actionsApplied.length === 0 && (
-                    <p className="text-sm text-gray-500 text-center">
-                      No actions taken yet
-                    </p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.5, delay: 0.5 }}
+            >
+              <Card className="glass-morphism glow-border">
+                <CardHeader>
+                  <CardTitle className="text-gradient">
+                    Recent Actions
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-2">
+                    {simulationState.actionsApplied
+                      .slice(-5)
+                      .map((action, index) => (
+                        <motion.div
+                          key={index}
+                          className="flex items-center space-x-2 text-sm p-2 rounded-lg bg-gradient-to-r from-green-500/10 to-emerald-500/10 border border-green-500/30"
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{ delay: index * 0.1 }}
+                        >
+                          <div className="w-2 h-2 bg-green-400 rounded-full pulse-glow"></div>
+                          <span className="text-gray-300">
+                            {action.type.replace("_", " ")}
+                          </span>
+                        </motion.div>
+                      ))}
+                    {simulationState.actionsApplied.length === 0 && (
+                      <p className="text-sm text-gray-400 text-center py-4">
+                        No actions taken yet
+                      </p>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </motion.div>
           </div>
         </div>
       </div>
