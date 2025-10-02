@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+
+    <!-- Basic Meta Tags -->
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="CleanSpace - Location-based air quality simulation game using NASA satellite and model data. Improve air quality through strategic actions and learn about environmental science."
+    />
+    <meta
+      name="keywords"
+      content="air quality, NASA, environment, game, education, climate, pollution, satellite data"
+    />
+    <meta name="author" content="CleanSpace Team" />
+    <meta name="robots" content="index, follow" />
+
+    <!-- Title -->
+    <title>CleanSpace - NASA Air Quality Game</title>
+
+    <!-- Favicon and Icons -->
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="32x32"
+      href="/icons/icon-32x32.png"
+    />
+    <link
+      rel="icon"
+      type="image/png"
+      sizes="16x16"
+      href="/icons/icon-16x16.png"
+    />
+    <link
+      rel="apple-touch-icon"
+      sizes="180x180"
+      href="/icons/apple-touch-icon.png"
+    />
+    <link rel="mask-icon" href="/icons/safari-pinned-tab.svg" color="#06B6D4" />
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Theme Colors -->
+    <meta name="theme-color" content="#06B6D4" />
+    <meta name="msapplication-TileColor" content="#111827" />
+    <meta name="msapplication-config" content="/browserconfig.xml" />
+
+    <!-- iOS PWA Support -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta
+      name="apple-mobile-web-app-status-bar-style"
+      content="black-translucent"
+    />
+    <meta name="apple-mobile-web-app-title" content="CleanSpace" />
+
+    <!-- Android PWA Support -->
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="application-name" content="CleanSpace" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cleanspace.app/" />
+    <meta property="og:title" content="CleanSpace - NASA Air Quality Game" />
+    <meta
+      property="og:description"
+      content="Location-based air quality simulation game using NASA satellite and model data. Improve air quality through strategic actions and learn about environmental science."
+    />
+    <meta property="og:image" content="/images/og-image.png" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:site_name" content="CleanSpace" />
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image" />
+    <meta property="twitter:url" content="https://cleanspace.app/" />
+    <meta
+      property="twitter:title"
+      content="CleanSpace - NASA Air Quality Game"
+    />
+    <meta
+      property="twitter:description"
+      content="Location-based air quality simulation game using NASA satellite and model data. Improve air quality through strategic actions and learn about environmental science."
+    />
+    <meta property="twitter:image" content="/images/twitter-image.png" />
+    <meta property="twitter:creator" content="@cleanspace_app" />
+
+    <!-- Preconnect to external domains -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://power.larc.nasa.gov" />
+    <link rel="preconnect" href="https://api.open-meteo.com" />
+
+    <!-- DNS Prefetch -->
+    <link rel="dns-prefetch" href="//fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="//fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="//power.larc.nasa.gov" />
+    <link rel="dns-prefetch" href="//api.open-meteo.com" />
+
+    <!-- Preload critical resources -->
+    <link
+      rel="preload"
+      href="/fonts/inter-var.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+
+    <!-- Security Headers -->
+    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
+    <meta http-equiv="X-Frame-Options" content="DENY" />
+    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <meta
+      http-equiv="Referrer-Policy"
+      content="strict-origin-when-cross-origin"
+    />
+
+    <!-- Performance Hints -->
+    <meta http-equiv="Accept-CH" content="DPR, Viewport-Width, Width" />
+
+    <!-- Structured Data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "WebApplication",
+        "name": "CleanSpace",
+        "description": "Location-based air quality simulation game using NASA satellite and model data",
+        "url": "https://cleanspace.app",
+        "applicationCategory": "GameApplication",
+        "operatingSystem": "Web Browser",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "author": {
+          "@type": "Organization",
+          "name": "CleanSpace Team"
+        },
+        "screenshot": "/screenshots/desktop-1.png",
+        "softwareVersion": "1.0.0",
+        "datePublished": "2024-01-01",
+        "dateModified": "2024-01-01"
+      }
+    </script>
+  </head>
+  <body>
+    <!-- Loading Screen -->
+    <div
+      id="loading-screen"
+      style="
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #111827 0%, #1f2937 100%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        z-index: 9999;
+        color: white;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+          sans-serif;
+      "
+    >
+      <div
+        style="
+          width: 64px;
+          height: 64px;
+          border: 4px solid #374151;
+          border-top: 4px solid #06b6d4;
+          border-radius: 50%;
+          animation: spin 1s linear infinite;
+          margin-bottom: 24px;
+        "
+      ></div>
+      <h1
+        style="
+          font-size: 24px;
+          font-weight: 600;
+          margin: 0 0 8px 0;
+          background: linear-gradient(135deg, #06b6d4, #3b82f6);
+          -webkit-background-clip: text;
+          -webkit-text-fill-color: transparent;
+          background-clip: text;
+        "
+      >
+        CleanSpace
+      </h1>
+      <p style="font-size: 14px; color: #9ca3af; margin: 0">
+        Loading NASA data...
+      </p>
+    </div>
+
+    <style>
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+    </style>
+
+    <!-- App Root -->
+    <div id="root"></div>
+
+    <!-- No Script Fallback -->
+    <noscript>
+      <div
+        style="
+          position: fixed;
+          top: 0;
+          left: 0;
+          width: 100%;
+          height: 100%;
+          background: #111827;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          justify-content: center;
+          color: white;
+          font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto,
+            sans-serif;
+          text-align: center;
+          padding: 20px;
+        "
+      >
+        <h1 style="font-size: 24px; margin-bottom: 16px">
+          JavaScript Required
+        </h1>
+        <p style="font-size: 16px; color: #9ca3af; max-width: 400px">
+          CleanSpace requires JavaScript to run. Please enable JavaScript in
+          your browser and refresh the page.
+        </p>
+      </div>
+    </noscript>
+
+    <!-- Main App Script -->
+    <script type="module" src="/src/main.tsx"></script>
+
+    <!-- Service Worker Registration -->
+    <script>
+      // Remove loading screen when app loads
+      window.addEventListener("load", () => {
+        const loadingScreen = document.getElementById("loading-screen");
+        if (loadingScreen) {
+          loadingScreen.style.opacity = "0";
+          loadingScreen.style.transition = "opacity 0.3s ease-out";
+          setTimeout(() => {
+            loadingScreen.remove();
+          }, 300);
+        }
+      });
+
+      // Register Service Worker
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker
+            .register("/sw.js")
+            .then((registration) => {
+              console.log("SW registered: ", registration);
+
+              // Check for updates
+              registration.addEventListener("updatefound", () => {
+                const newWorker = registration.installing;
+                if (newWorker) {
+                  newWorker.addEventListener("statechange", () => {
+                    if (
+                      newWorker.state === "installed" &&
+                      navigator.serviceWorker.controller
+                    ) {
+                      // New content available, show update notification
+                      if (window.showUpdateNotification) {
+                        window.showUpdateNotification();
+                      }
+                    }
+                  });
+                }
+              });
+            })
+            .catch((registrationError) => {
+              console.log("SW registration failed: ", registrationError);
+            });
+        });
+      }
+
+      // PWA Install Prompt
+      let deferredPrompt;
+      window.addEventListener("beforeinstallprompt", (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+
+        // Show install button
+        if (window.showInstallPrompt) {
+          window.showInstallPrompt(deferredPrompt);
+        }
+      });
+
+      // Track PWA installation
+      window.addEventListener("appinstalled", () => {
+        console.log("PWA was installed");
+        deferredPrompt = null;
+
+        // Analytics tracking
+        if (window.gtag) {
+          window.gtag("event", "pwa_install", {
+            event_category: "engagement",
+            event_label: "PWA Installation",
+          });
+        }
+      });
+    </script>
+  </body>
+</html>

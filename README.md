@@ -1,126 +1,44 @@
-# AI Quest Missions System - Comprehensive Climate Learning Platform
+# 🌍 CleanSpace - NASA Air Quality Game
 
-A gamified, AI-powered atmospheric science learning platform that combines NASA satellite data with interactive missions, real-time notifications, and community features.
+[![NASA Space Apps Challenge](https://img.shields.io/badge/NASA-Space%20Apps%20Challenge-blue.svg)](https://spaceappschallenge.org/)
+[![React](https://img.shields.io/badge/React-18.x-blue.svg)](https://reactjs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.x-blue.svg)](https://www.typescriptlang.org/)
+[![Supabase](https://img.shields.io/badge/Supabase-Database-green.svg)](https://supabase.com/)
+[![PWA](https://img.shields.io/badge/PWA-Ready-purple.svg)](https://web.dev/progressive-web-apps/)
 
-## 🌟 Key Features
+> **CleanSpace** is a location-based air quality simulation game that uses real NASA satellite and model data to help players understand and improve air quality through strategic environmental actions.
 
-### 1. AI Quest Missions System
+## 🎯 Overview
 
-- **Mission Cards**: Each mission includes title, difficulty level, XP rewards, badges, and progress tracking
-- **Difficulty Levels**: Beginner → Intermediate → Advanced → Expert
-- **Mission Types**:
-  - **Beginner**: Learn to read satellite/air quality data
-  - **Intermediate**: Analyze real datasets (NASA TEMPO, MODIS)
-  - **Advanced**: Predict patterns with ML models
-  - **Expert**: Propose solutions for real-world air/climate challenges
+CleanSpace transforms air quality data from NASA's POWER, MERRA-2, and MODIS datasets into an engaging, educational game experience. Players take on the role of environmental stewards, making strategic decisions to improve air quality in real-world locations while learning about atmospheric science and environmental policy.
 
-#### Interactive Mission Elements
+### 🌟 Key Features
 
-- **Drag-and-drop** data interpretation tasks
-- **AI-powered Q&A quizzes** with chatbot assistance
-- **Simulation puzzles** (e.g., predicting ozone depletion)
-- **Real-time data analysis** with NASA APIs
+- **🛰️ Real NASA Data Integration**: Live data from NASA POWER, MERRA-2, and MODIS
+- **🎮 Interactive Gameplay**: Strategic air quality improvement missions
+- **🤖 AI-Powered Assistant**: Gemini AI provides intelligent recommendations
+- **📱 Progressive Web App**: Full offline support and mobile optimization
+- **🔐 Secure Authentication**: Supabase-powered user management
+- **📊 Real-time Visualizations**: Dynamic charts and air quality monitoring
+- **🌐 Social Features**: Share achievements and compete on leaderboards
+- **📈 Analytics & Telemetry**: Comprehensive user behavior tracking
 
-### 2. User Profile System
-
-- **Dashboard Features**:
-  - Profile picture and username
-  - Current level and total XP
-  - Earned badges with rarity system (Common, Rare, Epic, Legendary)
-  - Achievement timeline
-  - Mission history and statistics
-  - Global and friends-based leaderboards
-
-### 3. Real-time Notification System
-
-- **Notification Types**:
-
-  - ✅ Mission completion alerts with XP earned
-  - 🏆 New badge/achievement notifications
-  - 📈 Level up celebrations
-  - 🌍 Weekly climate insights
-  - ⏰ Mission reminders and suggestions
-
-- **Delivery Methods**:
-  - In-app toast notifications
-  - Email notifications (configurable)
-  - Push notifications
-  - Notification center with history
-
-### 4. Comprehensive Settings System
-
-- **Appearance**: Dark/Light theme toggle
-- **Language Support**: 6+ languages with flag indicators
-- **Notification Preferences**: Granular control over all notification types
-- **API Connections**: NASA APIs and Gemini AI chatbot integration
-- **Privacy Controls**: Data management and account settings
-
-### 5. AI Chatbot Integration (Gemini API)
-
-The AI Mission Mentor provides:
-
-- **Mission Guidance**: Explains objectives and provides hints
-- **Data Analysis Help**: Assists with NASA dataset interpretation
-- **Interactive Learning**: Quizzes and knowledge testing
-- **Storytelling Mode**: Presents missions as space exploration adventures
-- **Team Collaboration**: Helps users find teammates and share results
-
-#### Quick Actions
-
-- Explain current mission
-- Help with data analysis
-- Quiz mode for learning
-- Story-driven mission narratives
-- Find teammates
-- Suggest next missions
-
-### 6. Authentication System
-
-- **Registration/Login**: Secure user account creation
-- **Profile Management**: Customizable user profiles
-- **Progress Tracking**: Persistent XP, levels, and achievements
-- **Social Features**: Friend connections and team formation
-
-### 7. Global Leaderboard
-
-- **Ranking Systems**: Global and friends-based leaderboards
-- **Multiple Timeframes**: All-time, monthly, and weekly rankings
-- **Achievement Showcase**: Badge collections and rare achievements
-- **Competitive Elements**: Seasonal challenges and tournaments
-
-### 8. Weekly Climate Insights
-
-- **Personalized Reports**: Region-specific air quality analysis
-- **Trend Analysis**: Improvement/decline patterns with explanations
-- **Mission Suggestions**: AI-recommended missions based on current data
-- **Educational Content**: Key findings and learning opportunities
-
-## 🛠 Technical Stack
-
-- **Frontend**: React 18 + TypeScript
-- **Styling**: Tailwind CSS with custom gradients and animations
-- **Animations**: Motion (Framer Motion) for smooth transitions
-- **State Management**: React Context for authentication and user data
-- **Backend Integration**: Supabase for user data and progress tracking
-- **APIs**: NASA TEMPO, MODIS, and other atmospheric data sources
-- **AI Integration**: Gemini API for chatbot functionality
-
-## 🚀 Getting Started
+## 🚀 Quick Start
 
 ### Prerequisites
 
-- Node.js 18+
-- npm or yarn
-- NASA API key (optional for demo)
-- Gemini API key (optional for chatbot)
+- Node.js 18+ and npm
+- Supabase account
+- NASA API key (optional, has fallbacks)
+- Gemini API key (optional, has fallbacks)
 
 ### Installation
 
 1. **Clone the repository**
 
    ```bash
-   git clone <repository-url>
-   cd ai-quest-missions
+   git clone https://github.com/your-org/cleanspace.git
+   cd cleanspace
    ```
 
 2. **Install dependencies**
@@ -132,142 +50,282 @@ The AI Mission Mentor provides:
 3. **Set up environment variables**
 
    ```bash
-   cp .env.example .env
-   # Add your API keys:
-   # VITE_NASA_API_KEY=your_nasa_api_key
-   # VITE_GEMINI_API_KEY=your_gemini_api_key
-   # VITE_SUPABASE_URL=your_supabase_url
-   # VITE_SUPABASE_ANON_KEY=your_supabase_key
+   cp .env.example .env.local
    ```
 
-4. **Start the development server**
+   Configure your `.env.local`:
+
+   ```env
+   # Supabase Configuration
+   REACT_APP_SUPABASE_URL=your_supabase_project_url
+   REACT_APP_SUPABASE_ANON_KEY=your_supabase_anon_key
+
+   # NASA APIs (optional - has fallbacks)
+   REACT_APP_NASA_API_KEY=your_nasa_api_key
+   REACT_APP_FIRMS_API_KEY=your_firms_api_key
+
+   # Third-party APIs (optional)
+   REACT_APP_GEMINI_API_KEY=your_gemini_api_key
+   REACT_APP_AQICN_API_KEY=your_aqicn_api_key
+   REACT_APP_PURPLEAIR_API_KEY=your_purpleair_api_key
+   ```
+
+4. **Set up Supabase database**
+
+   ```bash
+   # Run the schema in your Supabase SQL editor
+   cat supabase_schema.sql
+   ```
+
+5. **Start development server**
 
    ```bash
    npm run dev
    ```
 
-5. **Open your browser**
-   Navigate to `http://localhost:5173`
+6. **Build for production**
+   ```bash
+   npm run build
+   ```
 
-## 🎮 How to Use
+## 🏗️ Architecture
 
-### For New Users
+### Frontend Stack
 
-1. **Sign Up**: Create an account to track progress
-2. **Start with Beginner Missions**: Learn the basics of atmospheric data
-3. **Use the AI Mentor**: Ask questions and get guidance
-4. **Track Progress**: Watch your XP and level grow
-5. **Join the Community**: Connect with other climate explorers
+- **React 18** with TypeScript
+- **Vite** for fast development and building
+- **Tailwind CSS** for styling
+- **Framer Motion** for animations
+- **Recharts** for data visualizations
+- **Lucide React** for icons
 
-### For Educators
+### Backend & Services
 
-1. **Create Classroom Teams**: Organize students into collaborative groups
-2. **Assign Missions**: Use the mission system for structured learning
-3. **Monitor Progress**: Track student achievements and engagement
-4. **Customize Content**: Adapt missions for different skill levels
+- **Supabase** for database, authentication, and real-time features
+- **NASA APIs** for satellite and meteorological data
+- **Gemini AI** for intelligent game recommendations
+- **Service Workers** for offline functionality and caching
 
-### For Researchers
+### Key Services
 
-1. **Access Real Data**: Work with live NASA satellite feeds
-2. **Contribute Insights**: Share findings with the community
-3. **Advanced Missions**: Tackle expert-level climate challenges
-4. **Collaborate**: Form research teams for complex projects
+#### 🔐 Authentication Service (`authService.ts`)
 
-## 🏆 Mission Examples
+- Supabase-powered authentication
+- Social login (Google, GitHub)
+- Profile management
+- Password reset functionality
 
-### Beginner: "Atmospheric Detective"
+#### 📊 Data Service (`dataService.ts`)
 
-- **Objective**: Identify pollution hotspots using TEMPO data
-- **Skills**: Data visualization, pattern recognition
-- **Reward**: 2,500 XP + Data Detective Badge
-- **Interactive Elements**: Drag-and-drop data analysis, guided tutorials
+- User data management (achievements, progress, sessions)
+- Real-time subscriptions
+- Leaderboard functionality
+- Social sharing features
 
-### Advanced: "Ozone Guardian"
+#### 🛰️ NASA API Service (`nasaApiService.ts`)
 
-- **Objective**: Predict and prevent ozone depletion events
-- **Skills**: Machine learning, predictive modeling
-- **Reward**: 3,000 XP + Ozone Guardian Shield
-- **Interactive Elements**: ML model training, simulation scenarios
+- NASA POWER meteorological data
+- MERRA-2 aerosol data
+- MODIS fire and AOD data
+- Real-time air quality from multiple sources
+- Intelligent caching and fallbacks
 
-### Expert: "Climate Commander"
+#### 🤖 Gemini AI Service (`geminiAiService.ts`)
 
-- **Objective**: Design global air quality monitoring networks
-- **Skills**: Strategic planning, systems thinking
-- **Reward**: 1,800 XP + Command Badge
-- **Interactive Elements**: Network optimization, real-world impact assessment
+- Game recommendations and strategies
+- Air quality analysis and insights
+- Educational content generation
+- Contextual tips and guidance
 
-## 🌍 Data Sources
+#### 📱 Offline Service (`offlineService.ts`)
 
-- **NASA TEMPO**: Hourly air quality monitoring over North America
-- **NASA MODIS**: Global atmospheric and surface data
-- **NASA IMERG**: Precipitation data for correlation analysis
-- **EPA AirNow**: Real-time US air quality data
-- **OpenWeather**: Meteorological data for context
+- Service worker integration
+- Offline data caching
+- Action queuing for sync
+- Network status monitoring
+
+#### 📈 Analytics Service (`analyticsService.ts`)
+
+- User behavior tracking
+- Performance monitoring
+- Error reporting
+- Custom event tracking
+
+## 🎮 Game Mechanics
+
+### Core Gameplay Loop
+
+1. **Location Selection**: Choose a real-world location
+2. **Data Analysis**: Review NASA satellite data for air quality baseline
+3. **Strategic Planning**: Use AI recommendations to plan interventions
+4. **Action Execution**: Implement environmental improvements
+5. **Impact Assessment**: Monitor air quality changes over time
+6. **Achievement Unlocking**: Earn badges and climb leaderboards
+
+### Available Actions
+
+- **🌳 Plant Trees**: Reduce PM2.5 through natural filtration
+- **🏢 Rooftop Gardens**: Urban green spaces for air purification
+- **🚗 Vehicle Removal**: Reduce mobile emissions
+- **🏭 Factory Interventions**: Shutdown or retrofit industrial sources
+- **🏗️ Construction Management**: Replace polluting construction
+
+### Health & Energy System
+
+Players assume the role of an asthma/allergy patient, adding urgency:
+
+- **Health Bar**: Depletes in polluted areas
+- **Safe Zones**: Areas with AQI < 50 for recovery
+- **Time Pressure**: Limited exposure time before health impacts
+- **Strategic Movement**: Balance action-taking with health management
+
+## 📊 NASA Data Integration
+
+### Data Sources
+
+1. **NASA POWER API**
+
+   - Hourly meteorological data
+   - Temperature, humidity, wind speed
+   - Planetary boundary layer parameters
+
+2. **MERRA-2 Reanalysis**
+
+   - Aerosol mixing ratios
+   - Black carbon, organic carbon, sulfate, dust
+   - 3-hourly to daily products
+
+3. **MODIS Satellite Data**
+
+   - Aerosol Optical Depth (AOD)
+   - Fire detection and monitoring
+   - True color imagery
+
+4. **Real-time Sources**
+   - Open-Meteo air quality API
+   - AQICN global monitoring network
+   - PurpleAir sensor network
+
+### Data Processing Pipeline
+
+```
+Raw NASA Data → Spatial Subsetting → Unit Conversion → AQI Calculation → Game Integration
+```
+
+## 🔧 Development
+
+### Available Scripts
+
+```bash
+npm run dev          # Start development server
+npm run build        # Build for production
+npm run preview      # Preview production build
+npm run lint         # Run ESLint
+npm run type-check   # Run TypeScript checks
+```
+
+### Code Structure
+
+```
+src/
+├── components/          # React components
+│   ├── auth/           # Authentication components
+│   ├── cleanspace/     # Game-specific components
+│   ├── sharing/        # Social sharing features
+│   ├── visualizations/ # Data visualization components
+│   └── ui/             # Reusable UI components
+├── contexts/           # React contexts
+├── services/           # API and business logic services
+├── types/              # TypeScript type definitions
+├── lib/                # Utility libraries
+└── data/               # Static data and configurations
+```
+
+### Environment Configuration
+
+The app supports multiple deployment environments:
+
+- **Development**: Full debugging, mock data fallbacks
+- **Staging**: Production-like with test data
+- **Production**: Optimized build with real APIs
+
+## 🌐 Deployment
+
+### Vercel (Recommended)
+
+1. Connect your GitHub repository to Vercel
+2. Configure environment variables in Vercel dashboard
+3. Deploy automatically on push to main branch
+
+### Manual Deployment
+
+```bash
+npm run build
+# Deploy the `dist` folder to your hosting provider
+```
+
+### PWA Features
+
+The app includes full Progressive Web App support:
+
+- **Offline Functionality**: Core features work without internet
+- **Install Prompt**: Add to home screen on mobile devices
+- **Background Sync**: Sync data when connection is restored
+- **Push Notifications**: Receive updates and reminders
+- **Responsive Design**: Optimized for all screen sizes
+
+## 🔐 Security & Privacy
+
+### Data Protection
+
+- All user data encrypted in transit and at rest
+- Row Level Security (RLS) policies in Supabase
+- GDPR-compliant data handling
+- Optional telemetry with user consent
+
+### API Security
+
+- Rate limiting on all external API calls
+- API key rotation and management
+- Secure environment variable handling
+- CORS and CSP headers configured
+
+## 📈 Analytics & Monitoring
+
+### Built-in Analytics
+
+- User engagement tracking
+- Game performance metrics
+- Error monitoring and reporting
+- A/B testing capabilities
+
+### Performance Monitoring
+
+- Core Web Vitals tracking
+- Real User Monitoring (RUM)
+- API response time monitoring
+- Offline usage analytics
 
 ## 🤝 Contributing
 
 We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
 
-### Areas for Contribution
+### Development Workflow
 
-- New mission designs
-- Additional language translations
-- Enhanced data visualizations
-- Community features
-- Educational content
-- Bug fixes and optimizations
+1. Fork the repository
+2. Create a feature branch: `git checkout -b feature/amazing-feature`
+3. Make your changes and add tests
+4. Commit your changes: `git commit -m 'Add amazing feature'`
+5. Push to the branch: `git push origin feature/amazing-feature`
+6. Open a Pull Request
 
-## 📱 Mobile Support
+### Code Standards
 
-The platform is fully responsive and works on:
-
-- Desktop browsers (Chrome, Firefox, Safari, Edge)
-- Tablet devices (iPad, Android tablets)
-- Mobile phones (iOS Safari, Android Chrome)
-
-## 🔒 Privacy & Security
-
-- **Data Protection**: All user data is encrypted and securely stored
-- **Privacy Controls**: Users can download or delete their data anytime
-- **API Security**: All external API calls are properly authenticated
-- **GDPR Compliant**: Full compliance with data protection regulations
-
-## 📊 Analytics & Insights
-
-- **Learning Analytics**: Track user progress and engagement
-- **Mission Effectiveness**: Measure educational impact
-- **Community Metrics**: Monitor collaboration and sharing
-- **Performance Optimization**: Continuous improvement based on usage data
-
-## 🎯 Future Roadmap
-
-### Phase 1 (Current)
-
-- ✅ Core mission system
-- ✅ User authentication
-- ✅ AI chatbot integration
-- ✅ Notification system
-
-### Phase 2 (Next 3 months)
-
-- 🔄 Advanced team collaboration
-- 🔄 Real-time multiplayer missions
-- 🔄 Enhanced data visualization
-- 🔄 Mobile app development
-
-### Phase 3 (6 months)
-
-- 📋 VR/AR mission experiences
-- 📋 Advanced AI tutoring
-- 📋 Global climate challenges
-- 📋 Educational institution partnerships
-
-## 📞 Support
-
-- **Documentation**: [docs.airquest-nexus.com](https://docs.airquest-nexus.com)
-- **Community Forum**: [community.airquest-nexus.com](https://community.airquest-nexus.com)
-- **Email Support**: support@airquest-nexus.com
-- **Discord**: [Join our Discord server](https://discord.gg/airquest)
+- **TypeScript**: Strict mode enabled
+- **ESLint**: Airbnb configuration with React hooks
+- **Prettier**: Automatic code formatting
+- **Testing**: Jest and React Testing Library
+- **Commits**: Conventional commit messages
 
 ## 📄 License
 
@@ -275,13 +333,21 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 🙏 Acknowledgments
 
-- **NASA**: For providing open access to atmospheric data
-- **Google**: For Gemini AI API access
-- **Supabase**: For backend infrastructure
-- **The Climate Community**: For inspiration and feedback
+- **NASA** for providing open access to satellite and meteorological data
+- **Supabase** for the backend infrastructure
+- **Google Gemini** for AI-powered insights
+- **Open-Meteo** for real-time weather data
+- **The open-source community** for the amazing tools and libraries
+
+## 📞 Support
+
+- **Documentation**: [docs.cleanspace.app](https://docs.cleanspace.app)
+- **Issues**: [GitHub Issues](https://github.com/your-org/cleanspace/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/your-org/cleanspace/discussions)
+- **Email**: support@cleanspace.app
 
 ---
 
-**Built with ❤️ for climate education and environmental awareness**
-#   A i r Q u e s t - N e x u s  
- 
+**Built with ❤️ for the NASA Space Apps Challenge**
+
+_Making air quality data accessible, engaging, and actionable for everyone._
