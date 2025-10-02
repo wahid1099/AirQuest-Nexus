@@ -1,4 +1,3 @@
-import React from "react";
 import { motion } from "motion/react";
 import {
   Globe,
@@ -15,6 +14,9 @@ import {
   LogIn,
   LogOut,
   Gamepad2,
+  Satellite,
+  MapPin,
+  Layers,
 } from "lucide-react";
 import { Button } from "./ui/button";
 import { Badge } from "./ui/badge";
@@ -27,14 +29,59 @@ interface NavigationProps {
   setMobileMenuOpen: (open: boolean) => void;
   onLoginClick: () => void;
   onNotificationsClick: () => void;
+  currentLocation?: {
+    latitude: number;
+    longitude: number;
+    city: string;
+    country: string;
+  } | null;
 }
 
 const navigationItems = [
   {
-    id: "globe",
-    name: "Globe Explorer",
+    id: "explorer",
+    name: "Global Explorer",
     icon: Globe,
-    description: "Interactive 3D Earth visualization",
+    description: "Explore worldwide air quality data",
+  },
+  {
+    id: "atmosphere",
+    name: "3D Atmosphere",
+    icon: Layers,
+    description: "Interactive atmospheric visualization",
+  },
+  {
+    id: "nasa-dashboard",
+    name: "NASA Dashboard",
+    icon: Satellite,
+    description: "Real-time NASA satellite data",
+  },
+  {
+    id: "location",
+    name: "Location Finder",
+    icon: MapPin,
+    description: "Find and select locations",
+  },
+  {
+    id: "cleanspace",
+    name: "CleanSpace Missions",
+    icon: Gamepad2,
+    description: "Progressive mission gameplay",
+    requiresAuth: true,
+  },
+  {
+    id: "ai-missions",
+    name: "AI Quest",
+    icon: Zap,
+    description: "AI-powered challenges",
+    requiresAuth: true,
+  },
+  {
+    id: "missions",
+    name: "Classic Missions",
+    icon: Target,
+    description: "Traditional mission system",
+    requiresAuth: true,
   },
   {
     id: "dashboard",
@@ -43,26 +90,8 @@ const navigationItems = [
     description: "Real-time air quality metrics",
   },
   {
-    id: "ai-missions",
-    name: "AI Quest Missions",
-    icon: Zap,
-    description: "Gamified AI-powered missions",
-  },
-  {
-    id: "cleanspace",
-    name: "CleanSpace Game",
-    icon: Gamepad2,
-    description: "Location-based air quality simulation",
-  },
-  {
-    id: "missions",
-    name: "Classic Missions",
-    icon: Target,
-    description: "Traditional mission system",
-  },
-  {
     id: "community",
-    name: "Community Hub",
+    name: "Community",
     icon: Users,
     description: "Connect with global network",
   },
@@ -77,6 +106,7 @@ const navigationItems = [
     name: "Profile",
     icon: User,
     description: "Your achievements and progress",
+    requiresAuth: true,
   },
 ];
 
@@ -87,6 +117,7 @@ export function Navigation({
   setMobileMenuOpen,
   onLoginClick,
   onNotificationsClick,
+  currentLocation,
 }: NavigationProps) {
   const { user, logout } = useAuth();
 
@@ -113,8 +144,8 @@ export function Navigation({
 
           <div className="flex items-center space-x-1">
             {navigationItems.map((item) => {
-              // Hide profile section if not logged in
-              if (item.id === "profile" && !user) return null;
+              // Hide auth-required sections if not logged in
+              if (item.requiresAuth && !user) return null;
 
               return (
                 <Button
@@ -140,6 +171,16 @@ export function Navigation({
         </div>
 
         <div className="flex items-center space-x-4">
+          {/* Current Location Display */}
+          {currentLocation && (
+            <div className="hidden xl:flex items-center space-x-2 px-3 py-1 bg-gray-800/50 rounded-lg border border-gray-600/50">
+              <MapPin className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm text-gray-300">
+                {currentLocation.city}
+              </span>
+            </div>
+          )}
+
           {user ? (
             <>
               <Badge variant="secondary" className="px-3 py-1">
@@ -232,8 +273,8 @@ export function Navigation({
         >
           <div className="p-4 space-y-2">
             {navigationItems.map((item) => {
-              // Hide profile section if not logged in
-              if (item.id === "profile" && !user) return null;
+              // Hide auth-required sections if not logged in
+              if (item.requiresAuth && !user) return null;
 
               return (
                 <Button

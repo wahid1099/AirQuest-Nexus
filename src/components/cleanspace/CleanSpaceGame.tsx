@@ -32,7 +32,7 @@ import { Badge } from "../ui/badge";
 import { Progress } from "../ui/progress";
 import { MissionSelector } from "./MissionSelector";
 import { MissionLevel } from "../../data/missionLevels";
-import { div } from "motion/react-client";
+// Removed incorrect import
 
 // Enhanced types for mission system
 interface GameLocation {
@@ -507,7 +507,7 @@ export function CleanSpaceGame({
                       (r: any) => r.parameter === "no2"
                     );
                     const o3Data = data.results.find(
-                      (r: any) => r.parameter === "o3"
+                      (r: unknown) => r.parameter === "o3"
                     );
 
                     if (pm25Data || no2Data || o3Data) {
@@ -776,11 +776,21 @@ export function CleanSpaceGame({
   // Show mission selector if no mission is selected
   if (showMissionSelector) {
     return (
-      <MissionSelector
-        onMissionSelect={handleMissionSelect}
-        onBack={() => setShowMissionSelector(false)}
-        userProgress={userProgress}
-      />
+      <div className="min-h-screen cosmic-gradient p-4">
+        <div className="max-w-7xl mx-auto">
+          <div className="text-center mb-8">
+            <h1 className="text-4xl font-bold text-gradient mb-4">
+              CleanSpace Missions Debug
+            </h1>
+            <p className="text-gray-300">Mission selector should load here</p>
+          </div>
+          <MissionSelector
+            onMissionSelect={handleMissionSelect}
+            onBack={() => setShowMissionSelector(false)}
+            userProgress={userProgress}
+          />
+        </div>
+      </div>
     );
   }
 
@@ -1368,6 +1378,5 @@ export function CleanSpaceGame({
         )}
       </AnimatePresence>
     </div>
-    // </div>
   );
 }
