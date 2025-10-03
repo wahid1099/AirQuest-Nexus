@@ -67,7 +67,6 @@ const navigationItems = [
     name: "CleanSpace Missions",
     icon: Gamepad2,
     description: "Progressive mission gameplay",
-    requiresAuth: true,
   },
   {
     id: "ai-missions",

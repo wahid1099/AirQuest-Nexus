@@ -2,7 +2,14 @@ import { GameLocation } from "../types";
 
 export interface MissionObjective {
   id: string;
-  type: 'reduce_aqi' | 'plant_trees' | 'remove_pollution' | 'time_limit' | 'budget_limit' | 'satellite_data' | 'community_engagement';
+  type:
+    | "reduce_aqi"
+    | "plant_trees"
+    | "remove_pollution"
+    | "time_limit"
+    | "budget_limit"
+    | "satellite_data"
+    | "community_engagement";
   target: number;
   current: number;
   description: string;
@@ -17,7 +24,7 @@ export interface MissionLevel {
   subtitle: string;
   description: string;
   location: GameLocation;
-  difficulty: 'beginner' | 'intermediate' | 'advanced' | 'expert' | 'legendary';
+  difficulty: "beginner" | "intermediate" | "advanced" | "expert" | "legendary";
   estimatedTime: number; // in minutes
   initialCredits: number;
   objectives: MissionObjective[];
@@ -46,7 +53,7 @@ export interface Achievement {
   title: string;
   description: string;
   icon: string;
-  rarity: 'common' | 'rare' | 'epic' | 'legendary';
+  rarity: "common" | "rare" | "epic" | "legendary";
   points: number;
   unlockedAt?: Date;
   progress: {
@@ -63,7 +70,8 @@ export const missionLevels: MissionLevel[] = [
     level: 1,
     title: "First Steps to Clean Air",
     subtitle: "New York City Training Mission",
-    description: "Learn the basics of air quality management in one of the world's busiest cities. Use NASA satellite data to identify pollution hotspots and take your first actions to improve air quality.",
+    description:
+      "Learn the basics of air quality management in one of the world's busiest cities. Use NASA satellite data to identify pollution hotspots and take your first actions to improve air quality.",
     location: {
       id: "nyc_training",
       name: "New York City",
@@ -103,12 +111,25 @@ export const missionLevels: MissionLevel[] = [
       achievements: ["first_mission", "tree_planter"],
       unlocksNext: ["mission_002"],
     },
-    nasaDataSources: ["MODIS", "OMI"],
-    realWorldContext: "New York City faces significant air quality challenges due to traffic, industry, and population density. NASA's satellite data helps monitor NO2 and particulate matter levels.",
+    nasaDataSources: [
+      "TEMPO",
+      "MODIS",
+      "OMI",
+      "MERRA-2",
+      "AIRS",
+      "OpenAQ",
+      "AirNow",
+      "FIRMS",
+    ],
+    realWorldContext:
+      "New York City faces significant air quality challenges due to traffic, industry, and population density. NASA's comprehensive satellite constellation provides real-time monitoring of NO2, PM2.5, and ozone levels using TEMPO's geostationary observations combined with ground station validation.",
     scientificFacts: [
-      "NASA's OMI instrument can detect NO2 pollution from space with 13x24 km resolution",
-      "Trees can reduce particulate matter by up to 27% in urban areas",
-      "Air pollution causes over 200,000 premature deaths annually in the US"
+      "NASA's TEMPO provides hourly NO2, HCHO, and ozone measurements from geostationary orbit",
+      "MERRA-2 reanalysis combines satellite observations with weather models for comprehensive atmospheric data",
+      "NASA's AIRS instrument measures atmospheric temperature and humidity profiles twice daily",
+      "Trees can reduce particulate matter by up to 27% in urban areas according to NASA studies",
+      "The Pandora Project's 168 ground stations validate satellite measurements globally",
+      "Air pollution causes over 200,000 premature deaths annually in the US (WHO/NASA data)",
     ],
     isUnlocked: true,
     isCompleted: false,
@@ -118,7 +139,8 @@ export const missionLevels: MissionLevel[] = [
     level: 2,
     title: "Smog City Challenge",
     subtitle: "Los Angeles Air Quality Crisis",
-    description: "Tackle the infamous Los Angeles smog using advanced NASA TEMPO data. Learn about photochemical smog formation and implement targeted solutions.",
+    description:
+      "Tackle the infamous Los Angeles smog using advanced NASA TEMPO data. Learn about photochemical smog formation and implement targeted solutions.",
     location: {
       id: "la_smog",
       name: "Los Angeles",
@@ -169,12 +191,25 @@ export const missionLevels: MissionLevel[] = [
       achievements: ["smog_fighter", "tempo_user"],
       unlocksNext: ["mission_003"],
     },
-    nasaDataSources: ["TEMPO", "MODIS", "VIIRS"],
-    realWorldContext: "Los Angeles pioneered air quality monitoring and has reduced pollution by 80% since the 1980s despite population growth, thanks to regulations and technology.",
+    nasaDataSources: [
+      "TEMPO",
+      "MODIS",
+      "VIIRS",
+      "GOES",
+      "MERRA-2",
+      "IMERG",
+      "Worldview",
+      "TOLNet",
+    ],
+    realWorldContext:
+      "Los Angeles pioneered air quality monitoring and has reduced pollution by 80% since the 1980s despite population growth. NASA's TEMPO satellite provides unprecedented hourly monitoring of the LA basin's complex photochemical processes, while GOES imagery tracks meteorological conditions affecting pollution transport.",
     scientificFacts: [
-      "NASA's TEMPO provides hourly pollution measurements over North America",
+      "NASA's TEMPO provides hourly NO2, HCHO, and ozone measurements over North America",
+      "GOES-16/17 satellites provide 15-minute imagery for tracking pollution and weather patterns",
+      "NASA's TOLNet uses ground-based lidar to measure ozone profiles for satellite validation",
       "Ozone forms when NOx and VOCs react in sunlight - peak levels occur in afternoon",
-      "LA's geography traps pollution in a basin surrounded by mountains"
+      "LA's geography traps pollution in a basin surrounded by mountains",
+      "MERRA-2 reanalysis helps predict pollution transport patterns in complex terrain",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -184,7 +219,8 @@ export const missionLevels: MissionLevel[] = [
     level: 3,
     title: "Wildfire Smoke Response",
     subtitle: "California Emergency Management",
-    description: "Respond to a wildfire emergency using NASA MODIS fire detection data. Coordinate air quality protection measures for affected communities.",
+    description:
+      "Respond to a wildfire emergency using NASA MODIS fire detection data. Coordinate air quality protection measures for affected communities.",
     location: {
       id: "california_fires",
       name: "Northern California",
@@ -236,11 +272,12 @@ export const missionLevels: MissionLevel[] = [
       unlocksNext: ["mission_004"],
     },
     nasaDataSources: ["MODIS", "VIIRS", "GOES-16"],
-    realWorldContext: "Wildfires are increasing in frequency and intensity due to climate change. NASA satellites provide critical real-time data for emergency response.",
+    realWorldContext:
+      "Wildfires are increasing in frequency and intensity due to climate change. NASA satellites provide critical real-time data for emergency response.",
     scientificFacts: [
       "MODIS detects fires as small as 1000m² under ideal conditions",
       "Wildfire smoke can travel thousands of miles and affect air quality globally",
-      "PM2.5 from wildfires is particularly harmful to human health"
+      "PM2.5 from wildfires is particularly harmful to human health",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -252,7 +289,8 @@ export const missionLevels: MissionLevel[] = [
     level: 4,
     title: "Global Pollution Detective",
     subtitle: "Delhi Air Quality Crisis",
-    description: "Investigate the complex air pollution sources in Delhi using multiple NASA instruments. Address seasonal pollution patterns and agricultural burning.",
+    description:
+      "Investigate the complex air pollution sources in Delhi using multiple NASA instruments. Address seasonal pollution patterns and agricultural burning.",
     location: {
       id: "delhi_crisis",
       name: "Delhi",
@@ -305,11 +343,12 @@ export const missionLevels: MissionLevel[] = [
       unlocksNext: ["mission_005"],
     },
     nasaDataSources: ["MODIS", "OMI", "AIRS", "CALIPSO"],
-    realWorldContext: "Delhi experiences some of the world's worst air pollution, especially during winter when crop burning combines with local emissions and meteorological conditions.",
+    realWorldContext:
+      "Delhi experiences some of the world's worst air pollution, especially during winter when crop burning combines with local emissions and meteorological conditions.",
     scientificFacts: [
       "Delhi's PM2.5 levels can exceed WHO guidelines by 10-15 times during winter",
       "Agricultural burning in Punjab and Haryana contributes 20-40% of Delhi's pollution",
-      "NASA's CALIPSO lidar can track pollution plumes in 3D"
+      "NASA's CALIPSO lidar can track pollution plumes in 3D",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -319,7 +358,8 @@ export const missionLevels: MissionLevel[] = [
     level: 5,
     title: "Industrial Transformation",
     subtitle: "Beijing Manufacturing District",
-    description: "Transform a heavy industrial area in Beijing using NASA's multi-spectral analysis. Balance economic needs with environmental protection.",
+    description:
+      "Transform a heavy industrial area in Beijing using NASA's multi-spectral analysis. Balance economic needs with environmental protection.",
     location: {
       id: "beijing_industrial",
       name: "Beijing Industrial Zone",
@@ -372,11 +412,12 @@ export const missionLevels: MissionLevel[] = [
       unlocksNext: ["mission_006"],
     },
     nasaDataSources: ["MODIS", "OMI", "TROPOMI", "AIRS", "MISR"],
-    realWorldContext: "China has made significant investments in clean technology and pollution control, reducing PM2.5 levels by over 40% in major cities since 2013.",
+    realWorldContext:
+      "China has made significant investments in clean technology and pollution control, reducing PM2.5 levels by over 40% in major cities since 2013.",
     scientificFacts: [
       "NASA's TROPOMI instrument provides the highest resolution NO2 measurements from space",
       "Industrial emissions can be tracked and verified using satellite data",
-      "Beijing's air quality has improved dramatically due to policy interventions"
+      "Beijing's air quality has improved dramatically due to policy interventions",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -386,7 +427,8 @@ export const missionLevels: MissionLevel[] = [
     level: 6,
     title: "Saharan Dust Storm",
     subtitle: "Trans-Atlantic Pollution Transport",
-    description: "Track and mitigate the effects of a massive Saharan dust storm affecting air quality from Africa to the Americas using NASA's global monitoring network.",
+    description:
+      "Track and mitigate the effects of a massive Saharan dust storm affecting air quality from Africa to the Americas using NASA's global monitoring network.",
     location: {
       id: "saharan_dust",
       name: "Atlantic Dust Corridor",
@@ -439,11 +481,12 @@ export const missionLevels: MissionLevel[] = [
       unlocksNext: ["mission_007"],
     },
     nasaDataSources: ["MODIS", "CALIPSO", "MISR", "GOES-16", "Suomi NPP"],
-    realWorldContext: "Saharan dust storms transport billions of tons of dust across the Atlantic, affecting air quality and providing nutrients to Amazon rainforests.",
+    realWorldContext:
+      "Saharan dust storms transport billions of tons of dust across the Atlantic, affecting air quality and providing nutrients to Amazon rainforests.",
     scientificFacts: [
       "Saharan dust can travel over 5000 miles across the Atlantic Ocean",
       "NASA's CALIPSO uses lidar to create 3D maps of dust plumes",
-      "Dust storms can both harm air quality and fertilize ocean ecosystems"
+      "Dust storms can both harm air quality and fertilize ocean ecosystems",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -455,7 +498,8 @@ export const missionLevels: MissionLevel[] = [
     level: 7,
     title: "Arctic Pollution Paradox",
     subtitle: "Remote Arctic Air Quality",
-    description: "Investigate unexpected pollution in the pristine Arctic using NASA's polar-orbiting satellites. Discover long-range transport effects and climate connections.",
+    description:
+      "Investigate unexpected pollution in the pristine Arctic using NASA's polar-orbiting satellites. Discover long-range transport effects and climate connections.",
     location: {
       id: "arctic_pollution",
       name: "Arctic Research Station",
@@ -508,11 +552,12 @@ export const missionLevels: MissionLevel[] = [
       unlocksNext: ["mission_008"],
     },
     nasaDataSources: ["MODIS", "OMI", "CALIPSO", "ICESat-2", "GOME-2"],
-    realWorldContext: "The Arctic experiences 'Arctic haze' - pollution transported from lower latitudes that becomes trapped in the polar atmosphere during winter.",
+    realWorldContext:
+      "The Arctic experiences 'Arctic haze' - pollution transported from lower latitudes that becomes trapped in the polar atmosphere during winter.",
     scientificFacts: [
       "Pollution can travel to the Arctic from sources thousands of miles away",
       "Arctic haze contains black carbon that accelerates ice melting",
-      "NASA satellites provide crucial data for remote polar regions"
+      "NASA satellites provide crucial data for remote polar regions",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -522,7 +567,8 @@ export const missionLevels: MissionLevel[] = [
     level: 8,
     title: "Volcanic Ash Crisis",
     subtitle: "Global Aviation Emergency",
-    description: "Manage a major volcanic eruption's impact on global air quality and aviation using NASA's volcanic ash tracking systems.",
+    description:
+      "Manage a major volcanic eruption's impact on global air quality and aviation using NASA's volcanic ash tracking systems.",
     location: {
       id: "volcanic_ash",
       name: "Eyjafjallajökull Region",
@@ -574,12 +620,20 @@ export const missionLevels: MissionLevel[] = [
       achievements: ["volcano_responder", "aviation_protector"],
       unlocksNext: ["mission_009"],
     },
-    nasaDataSources: ["MODIS", "OMI", "CALIPSO", "GOES-16", "Suomi NPP", "AIRS"],
-    realWorldContext: "Volcanic eruptions can disrupt global aviation and affect air quality worldwide. The 2010 Eyjafjallajökull eruption grounded flights across Europe.",
+    nasaDataSources: [
+      "MODIS",
+      "OMI",
+      "CALIPSO",
+      "GOES-16",
+      "Suomi NPP",
+      "AIRS",
+    ],
+    realWorldContext:
+      "Volcanic eruptions can disrupt global aviation and affect air quality worldwide. The 2010 Eyjafjallajökull eruption grounded flights across Europe.",
     scientificFacts: [
       "Volcanic ash can damage aircraft engines and pose serious aviation risks",
       "NASA satellites can detect and track volcanic ash plumes in real-time",
-      "Volcanic eruptions inject sulfur dioxide high into the atmosphere"
+      "Volcanic eruptions inject sulfur dioxide high into the atmosphere",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -589,7 +643,8 @@ export const missionLevels: MissionLevel[] = [
     level: 9,
     title: "Megacity Transformation",
     subtitle: "São Paulo Urban Revolution",
-    description: "Lead a comprehensive urban air quality transformation in one of the world's largest megacities using integrated NASA Earth system data.",
+    description:
+      "Lead a comprehensive urban air quality transformation in one of the world's largest megacities using integrated NASA Earth system data.",
     location: {
       id: "sao_paulo_mega",
       name: "São Paulo Metropolitan Area",
@@ -650,12 +705,21 @@ export const missionLevels: MissionLevel[] = [
       achievements: ["megacity_master", "urban_transformer"],
       unlocksNext: ["mission_010"],
     },
-    nasaDataSources: ["MODIS", "OMI", "TROPOMI", "AIRS", "MISR", "Landsat", "SRTM"],
-    realWorldContext: "São Paulo is home to over 22 million people and faces complex air quality challenges from traffic, industry, and urban heat islands.",
+    nasaDataSources: [
+      "MODIS",
+      "OMI",
+      "TROPOMI",
+      "AIRS",
+      "MISR",
+      "Landsat",
+      "SRTM",
+    ],
+    realWorldContext:
+      "São Paulo is home to over 22 million people and faces complex air quality challenges from traffic, industry, and urban heat islands.",
     scientificFacts: [
       "Megacities house over 10 million people and face unique pollution challenges",
       "Urban heat islands can increase pollution formation and health impacts",
-      "Integrated satellite data helps understand complex urban air quality patterns"
+      "Integrated satellite data helps understand complex urban air quality patterns",
     ],
     isUnlocked: false,
     isCompleted: false,
@@ -667,7 +731,8 @@ export const missionLevels: MissionLevel[] = [
     level: 10,
     title: "Global Climate Guardian",
     subtitle: "Planetary Air Quality Mission",
-    description: "The ultimate challenge: coordinate a global air quality improvement initiative using the full suite of NASA's Earth observing systems. Save the planet's atmosphere.",
+    description:
+      "The ultimate challenge: coordinate a global air quality improvement initiative using the full suite of NASA's Earth observing systems. Save the planet's atmosphere.",
     location: {
       id: "global_mission",
       name: "Planet Earth",
@@ -730,7 +795,11 @@ export const missionLevels: MissionLevel[] = [
     unlockRequirements: {
       previousLevel: "mission_009",
       totalScore: 3000,
-      achievementsRequired: ["megacity_master", "urban_transformer", "arctic_guardian"],
+      achievementsRequired: [
+        "megacity_master",
+        "urban_transformer",
+        "arctic_guardian",
+      ],
     },
     rewards: {
       credits: 5000,
@@ -738,12 +807,17 @@ export const missionLevels: MissionLevel[] = [
       achievements: ["planetary_guardian", "nasa_champion", "climate_hero"],
       unlocksNext: [],
     },
-    nasaDataSources: ["All NASA Earth Observing Satellites", "International Space Station", "Ground Networks"],
-    realWorldContext: "Global air quality affects climate, human health, and ecosystems. NASA's Earth observing system provides unprecedented insights into our planet's atmosphere.",
+    nasaDataSources: [
+      "All NASA Earth Observing Satellites",
+      "International Space Station",
+      "Ground Networks",
+    ],
+    realWorldContext:
+      "Global air quality affects climate, human health, and ecosystems. NASA's Earth observing system provides unprecedented insights into our planet's atmosphere.",
     scientificFacts: [
       "NASA operates over 20 Earth observing satellites monitoring air quality",
       "Air pollution causes 7 million premature deaths globally each year",
-      "Coordinated global action is essential to address atmospheric challenges"
+      "Coordinated global action is essential to address atmospheric challenges",
     ],
     isUnlocked: false,
     isCompleted: false,

@@ -39,6 +39,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error("Error parsing saved user:", error);
         localStorage.removeItem("airquest_user");
       }
+    } else {
+      // Create a guest user for demo purposes
+      const guestUser: User = {
+        id: "guest_user",
+        username: "Guest Explorer",
+        email: "guest@airquest.demo",
+        level: 1,
+        totalXP: 0,
+        achievements: [],
+        createdAt: new Date(),
+        lastLoginAt: new Date(),
+        preferences: {
+          theme: "dark",
+          notifications: true,
+          units: "metric",
+        },
+      };
+      setUser(guestUser);
+      localStorage.setItem("airquest_user", JSON.stringify(guestUser));
     }
     setLoading(false);
   }, []);

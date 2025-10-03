@@ -145,11 +145,7 @@ function AppContent() {
           </ProtectedRoute>
         );
       case "cleanspace":
-        return (
-          <ProtectedRoute>
-            <CleanSpaceGame />
-          </ProtectedRoute>
-        );
+        return <CleanSpaceGame />;
       case "community":
         return <CommunityHub />;
       case "profile":
