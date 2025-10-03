@@ -2,10 +2,11 @@ import { createClient } from "@supabase/supabase-js";
 import { Database } from "../types/database";
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL || "";
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_KEY || "";
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY || "";
 
 if (!supabaseUrl || !supabaseAnonKey) {
   console.warn("Supabase URL or API key not found in environment variables");
+  console.warn("Available env vars:", Object.keys(import.meta.env));
 }
 
 export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {

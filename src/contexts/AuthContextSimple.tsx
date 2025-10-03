@@ -65,7 +65,41 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const login = async (email: string, password: string) => {
     setLoading(true);
     try {
-      // Simulate API call delay
+      // Try Supabase login first, fallback to demo login
+      try {
+        const { supabase } = await import("../lib/supabase");
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          const newUser: User = {
+            id: data.user.id,
+            username: data.user.user_metadata?.username || email.split("@")[0],
+            email: data.user.email || email,
+            level: 1,
+            totalXP: 0,
+            achievements: [],
+            createdAt: new Date(),
+            lastLoginAt: new Date(),
+            preferences: {
+              theme: "dark",
+              notifications: true,
+              units: "metric",
+            },
+          };
+          setUser(newUser);
+          localStorage.setItem("airquest_user", JSON.stringify(newUser));
+          return;
+        }
+      } catch (supabaseError) {
+        console.warn("Supabase login failed, using demo mode:", supabaseError);
+      }
+
+      // Fallback to demo login
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       // For demo purposes, accept any email/password combination
@@ -109,7 +143,49 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   ) => {
     setLoading(true);
     try {
-      // Simulate API call delay
+      // Try Supabase registration first, fallback to demo registration
+      try {
+        const { supabase } = await import("../lib/supabase");
+        const { data, error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: {
+            data: {
+              username,
+            },
+          },
+        });
+
+        if (error) throw error;
+
+        if (data.user) {
+          const newUser: User = {
+            id: data.user.id,
+            username: username,
+            email: email,
+            level: 1,
+            totalXP: 0,
+            achievements: [],
+            createdAt: new Date(),
+            lastLoginAt: new Date(),
+            preferences: {
+              theme: "dark",
+              notifications: true,
+              units: "metric",
+            },
+          };
+          setUser(newUser);
+          localStorage.setItem("airquest_user", JSON.stringify(newUser));
+          return;
+        }
+      } catch (supabaseError) {
+        console.warn(
+          "Supabase registration failed, using demo mode:",
+          supabaseError
+        );
+      }
+
+      // Fallback to demo registration
       await new Promise((resolve) => setTimeout(resolve, 1000));
 
       const newUser: User = {
@@ -118,21 +194,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         email,
         level: 1,
         totalXP: 0,
-        globalRank: 999999,
-        joinDate: new Date(),
+        achievements: [],
+        createdAt: new Date(),
+        lastLoginAt: new Date(),
         preferences: {
           theme: "dark",
-          language: "en",
-          notifications: {
-            email: true,
-            push: true,
-            weeklyInsights: true,
-            missionReminders: true,
-          },
-          apiConnections: {
-            nasa: false,
-            gemini: false,
-          },
+          notifications: true,
+          units: "metric",
         },
       };
 
@@ -145,9 +213,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const logout = () => {
-    setUser(null);
-    localStorage.removeItem("airquest_user");
+  const logout = async () => {
+    try {
+      // Try Supabase logout first
+      try {
+        const { supabase } = await import("../lib/supabase");
+        await supabase.auth.signOut();
+      } catch (supabaseError) {
+        console.warn("Supabase logout failed:", supabaseError);
+      }
+    } catch (error) {
+      console.error("Logout error:", error);
+    } finally {
+      setUser(null);
+      localStorage.removeItem("airquest_user");
+    }
   };
 
   const updateProfile = async (updates: Partial<User>) => {

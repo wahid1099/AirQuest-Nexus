@@ -13,9 +13,9 @@ import {
   CommunityHub,
   ParticleSystem,
   UserProfile,
-  LoginModal,
   SettingsPanel,
 } from "./components/fallback/MissingComponents";
+import { LoginModal } from "./components/auth/LoginModal";
 import { CleanSpaceGame } from "./components/cleanspace/CleanSpaceGame";
 import { InteractiveAtmosphere } from "./components/atmosphere/InteractiveAtmosphere";
 import { GlobalExplorer } from "./components/explorer/GlobalExplorer";
